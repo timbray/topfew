@@ -14,6 +14,7 @@ import (
 func main() {
 	size := flag.Uint("few", 10, "how many is a few?")
 	fieldSpec := flag.String("fields", "", "which fields?")
+	mmap := flag.Bool("mmap", false, "use mmap rather than file reader")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 
 	flag.Parse()
@@ -41,7 +42,11 @@ func main() {
 	if fname == "" {
 		reader = os.Stdin
 	} else {
-		reader, err = os.Open(fname)
+		if *mmap {
+			reader, err = topfew.NewMmap(fname)
+		} else {
+			reader, err = os.Open(fname)
+		}
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "Can’t open %s: %s", fname, err.Error())
 		}
