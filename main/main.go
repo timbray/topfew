@@ -53,7 +53,7 @@ func main() {
 	}
 
 	kf := topfew.NewKeyFinder(fields)
-	topList, err := topfew.TopFewFromStream(reader, kf, *size)
+	topList, err := topfew.FromStream(reader, kf, *size)
 	for _, kc := range topList {
 		fmt.Printf("%d %s\n", kc.Count, kc.Key)
 	}

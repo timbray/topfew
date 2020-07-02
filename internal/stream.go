@@ -2,25 +2,24 @@ package topfew
 
 import (
 	"bufio"
-	"errors"
 	"io"
 )
 
-func TopFewFromStream(ioReader io.Reader, kf *KeyFinder, size uint) ([]*KeyCount, error) {
-	scanner := bufio.NewScanner(ioReader)
+func FromStream(ioReadr io.Reader, kf *KeyFinder, size uint) ([]*KeyCount, error) {
 	counter := NewCounter(size)
-	for scanner.Scan() {
-		key, err := kf.GetKey(scanner.Text())
-		// for now, we'll skip records we can't make a key for. Later, a dead-letter-file would be nice
-		if err != nil {
-			continue
+	reader := bufio.NewReader(ioReadr)
+	for true {
+		record, err := reader.ReadBytes('\n')
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
 		}
-		counter.Add(key)
+		keyBytes, err := kf.GetKey(record)
+		if err != nil {
+			return nil, err
+		}
+		counter.Add(string(keyBytes))
 	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, errors.New("I/O error: " + err.Error())
-	}
-
 	return counter.GetTop(), nil
 }

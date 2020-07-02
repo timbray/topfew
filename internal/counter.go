@@ -14,8 +14,8 @@ type KeyCount struct {
 // threshold represents the minimum count value to qualify for consideration as a top count
 // the "top" map represents the keys & counts encountered so far which are higher than threshold
 type Counter struct {
-	counts    map[string]uint64
-	top       map[string]uint64
+	counts    map[string]*uint64
+	top       map[string]*uint64
 	threshold uint64
 	size      int
 }
@@ -23,23 +23,25 @@ type Counter struct {
 func NewCounter(size uint) *Counter {
 	t := new(Counter)
 	t.size = int(size)
-	t.counts = make(map[string]uint64)
-	t.top = make(map[string]uint64)
+	t.counts = make(map[string]*uint64)
+	t.top = make(map[string]*uint64)
 	return t
 }
 
 func (t *Counter) Add(key string) {
+
 	// have we seen this key?
 	count, ok := t.counts[key]
 	if !ok {
-		count = 1
+		var one uint64 = 1
+		count = &one
+		t.counts[key] = count
 	} else {
-		count++
+		*count++
 	}
-	t.counts[key] = count
 
 	// big enough to be a top candidate?
-	if count < t.threshold {
+	if *count < t.threshold {
 		return
 	}
 	t.top[key] = count
@@ -53,16 +55,16 @@ func (t *Counter) Add(key string) {
 	var topList = t.topAsSortedList()
 	topList = topList[0:t.size]
 	t.threshold = topList[len(topList)-1].Count
-	t.top = make(map[string]uint64)
+	t.top = make(map[string]*uint64)
 	for _, kc := range topList {
-		t.top[kc.Key] = kc.Count
+		t.top[kc.Key] = &kc.Count
 	}
 }
 
 func (t *Counter) topAsSortedList() []*KeyCount {
 	var topList []*KeyCount
 	for key, count := range t.top {
-		topList = append(topList, &KeyCount{key, count})
+		topList = append(topList, &KeyCount{key, *count})
 	}
 	sort.Slice(topList, func(k1, k2 int) bool {
 		return topList[k1].Count > topList[k2].Count

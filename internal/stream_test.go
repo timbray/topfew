@@ -14,7 +14,7 @@ func Test1KLinesStream(t *testing.T) {
 	defer file.Close()
 
 	kf := NewKeyFinder([]uint{1})
-	x, err := TopFewFromStream(file, kf, 5)
+	x, err := FromStream(file, kf, 5)
 	if err != nil {
 		t.Error("OUCH: " + err.Error())
 	}

@@ -3,44 +3,83 @@ package topfew
 // Extract a key from a record based on a list of keys. If the list is empty, the key is the whole record.
 //  Otherwise there's a list of fields. They are extracted, joined with spaces, and that's the key
 
+// First implementation was regexp based but Golang regexps are slow.  So we'll use a hand-built state machine that
+//  only cares whether each byte encodes space-or-tab or not.
+
 import (
 	"errors"
-	"regexp"
 )
 
-type KeyFinder struct {
-	keys []int
-	sep  *regexp.Regexp
-}
+const NER = "not enough records"
 
-// make a new KeyFinder. If the keys argument is empty or nil, return the whole record. The field numbers
-//  are 1-based.
+type KeyFinder []uint
+
 func NewKeyFinder(keys []uint) *KeyFinder {
-	kf := new(KeyFinder)
 	if keys == nil {
-		kf.keys = nil
-	} else {
-		for _, knum := range keys {
-			kf.keys = append(kf.keys, int(knum-1)) // make it 0-based
-		}
+		return nil
 	}
-	kf.sep = regexp.MustCompile("\\s+")
-	return kf
+
+	var kf KeyFinder
+	for _, knum := range keys {
+		kf = append(kf, knum-1)
+	}
+	return &kf
 }
 
-// Get a key.
-//  Possibly the record doesn't have enough fields, in which case the error will be set.
-func (f *KeyFinder) GetKey(record string) (string, error) {
-	if f.keys == nil || len(f.keys) == 0 {
+func (kf *KeyFinder) GetKey(record []byte) (key []byte, err error) {
+	if kf == nil || len(*kf) == 0 {
 		return record, nil
 	}
-	fields := f.sep.Split(record, f.keys[len(f.keys)-1]+2)
-	if len(fields) <= f.keys[len(f.keys)-1] {
-		return "", errors.New("not enough fields to make key")
+
+	field := 0
+	index := 0
+	for _, keyField := range *kf {
+		for field < int(keyField) {
+			index, err = pass(record, index)
+			if err != nil {
+				return
+			}
+			field++
+		}
+		key, index, err = gather(key, record, index)
+		if err != nil {
+			return
+		}
+		field++
 	}
-	key := fields[f.keys[0]]
-	for field := 1; field < len(f.keys); field++ {
-		key = key + " " + fields[f.keys[field]]
+	return
+}
+
+func gather(key []byte, record []byte, index int) ([]byte, int, error) {
+
+	// eat leading space
+	saveIndex := index
+	for index < len(record) && (record[index] == ' ' || record[index] == '\t') {
+		index++
 	}
-	return key, nil
+	if index == len(record) {
+		return nil, 0, errors.New(NER)
+	}
+	if saveIndex != index {
+		key = append(key, ' ')
+	}
+	for index < len(record) && record[index] != ' ' && record[index] != '\t' {
+		key = append(key, record[index])
+		index++
+	}
+	return key, index, nil
+}
+
+func pass(record []byte, index int) (int, error) {
+	// eat leading space
+	for index < len(record) && (record[index] == ' ' || record[index] == '\t') {
+		index++
+	}
+	if index == len(record) {
+		return 0, errors.New(NER)
+	}
+	for index < len(record) && record[index] != ' ' && record[index] != '\t' {
+		index++
+	}
+	return index, nil
 }
