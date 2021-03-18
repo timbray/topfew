@@ -20,7 +20,7 @@ func Test1KLines(t *testing.T) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		fields := re.Split(scanner.Text(), 2)
-		table.Add(fields[0])
+		table.Add([]byte(fields[0]))
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -59,7 +59,7 @@ func TestTable_Add(t *testing.T) {
 		"c", "g",
 		"c"}
 	for _, key := range keys {
-		table.Add(key)
+		table.Add([]byte(key))
 	}
 	x := table.GetTop()
 	wanted := []KeyCount{
@@ -81,7 +81,7 @@ func TestTable_Add(t *testing.T) {
 
 	table = NewCounter(3)
 	for _, key := range keys {
-		table.Add(key)
+		table.Add([]byte(key))
 	}
 	x = table.GetTop()
 	wanted = []KeyCount{

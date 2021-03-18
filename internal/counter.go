@@ -2,6 +2,7 @@ package topfew
 
 import (
 	"sort"
+	"sync"
 )
 
 // represents a key's occurrence count
@@ -18,6 +19,7 @@ type Counter struct {
 	top       map[string]*uint64
 	threshold uint64
 	size      int
+	lock      sync.Mutex
 }
 
 func NewCounter(size uint) *Counter {
@@ -28,14 +30,26 @@ func NewCounter(size uint) *Counter {
 	return t
 }
 
-func (t *Counter) Add(key string) {
+func (t *Counter) ConcurrentAddKeys(keys [][]byte) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	for _, key := range keys {
+		t.Add(key)
+	}
+}
+
+// note the call with a byte slice rather than the string because of
+//  https://github.com/golang/go/commit/f5f5a8b6209f84961687d993b93ea0d397f5d5bf
+//  which recognizes the idiom foo[string(someByteSlice)] and bypasses constructing the string;
+//  of course we'd rather just say foo[someByteSlice] but that's not legal because Reasons.
+func (t *Counter) Add(bytes []byte) {
 
 	// have we seen this key?
-	count, ok := t.counts[key]
+	count, ok := t.counts[string(bytes)]
 	if !ok {
 		var one uint64 = 1
 		count = &one
-		t.counts[key] = count
+		t.counts[string(bytes)] = count
 	} else {
 		*count++
 	}
@@ -44,7 +58,7 @@ func (t *Counter) Add(key string) {
 	if *count < t.threshold {
 		return
 	}
-	t.top[key] = count
+	t.top[string(bytes)] = count
 
 	// has the top set grown enough to compress?
 	if len(t.top) < (t.size * 2) {
@@ -73,6 +87,8 @@ func (t *Counter) topAsSortedList() []*KeyCount {
 }
 
 func (t *Counter) GetTop() []*KeyCount {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 	topList := t.topAsSortedList()
 	if len(topList) > t.size {
 		return topList[0:t.size]

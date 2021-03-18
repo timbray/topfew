@@ -19,7 +19,7 @@ func FromStream(ioReadr io.Reader, kf *KeyFinder, size uint) ([]*KeyCount, error
 		if err != nil {
 			return nil, err
 		}
-		counter.Add(string(keyBytes))
+		counter.Add(keyBytes)
 	}
 	return counter.GetTop(), nil
 }

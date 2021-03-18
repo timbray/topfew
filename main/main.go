@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	topfew "github.com/timbray/topfew/internal"
-	"io"
 	"os"
 	"runtime/pprof"
 	"strconv"
@@ -14,7 +13,6 @@ import (
 func main() {
 	size := flag.Uint("few", 10, "how many is a few?")
 	fieldSpec := flag.String("fields", "", "which fields?")
-	mmap := flag.Bool("mmap", false, "use mmap rather than file reader")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 
 	flag.Parse()
@@ -29,31 +27,36 @@ func main() {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "can't create profiler: %s", err.Error())
+			return
 		}
 		err = pprof.StartCPUProfile(f)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "can't start profiler: %s", err.Error())
+			return
 		}
 		defer pprof.StopCPUProfile()
 	}
 
-	var reader io.Reader
 	var err error
+	kf := topfew.NewKeyFinder(fields)
+	var topList []*topfew.KeyCount
+
 	if fname == "" {
-		reader = os.Stdin
-	} else {
-		if *mmap {
-			reader, err = topfew.NewMmap(fname)
-		} else {
-			reader, err = os.Open(fname)
-		}
+		topList, err = topfew.FromStream(os.Stdin, kf, *size)
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Can’t open %s: %s", fname, err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "Error reading stream: %s\n", err.Error())
+			return
 		}
+	} else {
+			counter := topfew.NewCounter(*size)
+			err = topfew.ReadFileInSegments(fname, counter, kf)
+			if err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Error processing %s: %s\n", fname, err.Error())
+				return
+			}
+			topList = counter.GetTop()
 	}
 
-	kf := topfew.NewKeyFinder(fields)
-	topList, err := topfew.FromStream(reader, kf, *size)
 	for _, kc := range topList {
 		fmt.Printf("%d %s\n", kc.Count, kc.Key)
 	}

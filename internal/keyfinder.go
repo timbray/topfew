@@ -33,6 +33,7 @@ func (kf *KeyFinder) GetKey(record []byte) (key []byte, err error) {
 
 	field := 0
 	index := 0
+	first := true
 	for _, keyField := range *kf {
 		for field < int(keyField) {
 			index, err = pass(record, index)
@@ -41,7 +42,13 @@ func (kf *KeyFinder) GetKey(record []byte) (key []byte, err error) {
 			}
 			field++
 		}
+		if first {
+			first = false
+		} else {
+			key = append(key, ' ')
+		}
 		key, index, err = gather(key, record, index)
+
 		if err != nil {
 			return
 		}
@@ -53,15 +60,11 @@ func (kf *KeyFinder) GetKey(record []byte) (key []byte, err error) {
 func gather(key []byte, record []byte, index int) ([]byte, int, error) {
 
 	// eat leading space
-	saveIndex := index
 	for index < len(record) && (record[index] == ' ' || record[index] == '\t') {
 		index++
 	}
 	if index == len(record) {
 		return nil, 0, errors.New(NER)
-	}
-	if saveIndex != index {
-		key = append(key, ' ')
 	}
 	for index < len(record) && record[index] != ' ' && record[index] != '\t' {
 		key = append(key, record[index])
