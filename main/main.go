@@ -11,9 +11,11 @@ import (
 )
 
 func main() {
-	size := flag.Uint("few", 10, "how many is a few?")
-	fieldSpec := flag.String("fields", "", "which fields?")
+	size := flag.Uint("n", 10, "how many of the top results to display")
+	fieldSpec := flag.String("fields", "", "fields (one or more comma-separated numbers)")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+
+	var err error
 
 	flag.Parse()
 	fname := flag.Arg(0)
@@ -37,8 +39,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var err error
-	kf := topfew.NewKeyFinder(fields)
+	var kf = topfew.NewKeyFinder(fields)
 	var topList []*topfew.KeyCount
 
 	if fname == "" {
@@ -48,13 +49,13 @@ func main() {
 			return
 		}
 	} else {
-			counter := topfew.NewCounter(*size)
-			err = topfew.ReadFileInSegments(fname, counter, kf)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "Error processing %s: %s\n", fname, err.Error())
-				return
-			}
-			topList = counter.GetTop()
+		counter := topfew.NewCounter(*size)
+		err = topfew.ReadFileInSegments(fname, counter, kf)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "Error processing %s: %s\n", fname, err.Error())
+			return
+		}
+		topList = counter.GetTop()
 	}
 
 	for _, kc := range topList {
