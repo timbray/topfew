@@ -5,9 +5,9 @@ import (
 	"io"
 )
 
-func FromStream(ioReadr io.Reader, kf *KeyFinder, size uint) ([]*KeyCount, error) {
+func FromStream(ioReader io.Reader, kf *KeyFinder, size uint) ([]*KeyCount, error) {
 	counter := NewCounter(size)
-	reader := bufio.NewReader(ioReadr)
+	reader := bufio.NewReader(ioReader)
 	for true {
 		record, err := reader.ReadBytes('\n')
 		if err == io.EOF {

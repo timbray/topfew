@@ -28,9 +28,9 @@ func TestKeyFinder(t *testing.T) {
 		}
 	}
 
-	singles := []string { "x", "b", "b" }
+	singles := []string{"x", "b", "b"}
 	kf = NewKeyFinder([]uint{2})
-	for i, record := range(records) {
+	for i, record := range records {
 		k, err := kf.GetKey([]byte(record))
 		if err != nil {
 			t.Error("KF fail on: " + record)

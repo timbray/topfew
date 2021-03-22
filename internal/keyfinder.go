@@ -66,7 +66,7 @@ func gather(key []byte, record []byte, index int) ([]byte, int, error) {
 	if index == len(record) {
 		return nil, 0, errors.New(NER)
 	}
-	for index < len(record) && record[index] != ' ' && record[index] != '\t' {
+	for index < len(record) && record[index] != ' ' && record[index] != '\t' && record[index] != '\n' {
 		key = append(key, record[index])
 		index++
 	}

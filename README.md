@@ -5,7 +5,7 @@ most frequently
 
 ## Usage
 
-`tf -fields <which-fields?> -few <how-few?> filename`
+`tf -fields <which-fields?> -n <how-few?> filename`
 
 If no filename is provided, tf processes the standard input.
 
@@ -15,7 +15,7 @@ single number like 2 or a list like 1,3,5. Field numbers
 are 1-based. If not provided, the whole record is treated
 as a single field.
 
-`how-few?` is a number that says how many lines of output
+`n` is a number that says how many lines of output
 to produce. The default is 10.  
 
 ## Example

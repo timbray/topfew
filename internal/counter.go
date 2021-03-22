@@ -14,6 +14,7 @@ type KeyCount struct {
 // represents a bunch of keys and their occurrence counts, with the highest counts tracked.
 // threshold represents the minimum count value to qualify for consideration as a top count
 // the "top" map represents the keys & counts encountered so far which are higher than threshold
+// TODO: Remember why these are pointers not integers, there was a good reason but I forgot.
 type Counter struct {
 	counts    map[string]*uint64
 	top       map[string]*uint64

@@ -1,5 +1,5 @@
 
-all:	test build
+all:	test build linux
 
 test:	internal/*.go
 	cd internal && go test -v
@@ -7,4 +7,6 @@ test:	internal/*.go
 build:	*/*.go
 	go build -o bin/tf main/main.go
 
+linux:	*/*.go
+	GOOS=linux go build -o bin/ltf main/main.go
 
