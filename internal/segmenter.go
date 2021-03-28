@@ -19,7 +19,7 @@ type Segment struct {
  * The idea is that we break the file up into segments, one for each core that Golang thinks the machine
  *  has, and read them in parallel
  */
-func ReadFileInSegments(fname string, counter *Counter, kf *KeyFinder) error {
+func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *KeyFinder, width int) error {
 
 	// find file size
 	file, err := os.Open(fname)
@@ -33,8 +33,13 @@ func ReadFileInSegments(fname string, counter *Counter, kf *KeyFinder) error {
 	fileSize := info.Size()
 	_ = file.Close()
 
-	cores := runtime.NumCPU()
-	segSize := fileSize / int64(cores)
+	var segSize int64
+	if width == 0 {
+		cores := runtime.NumCPU()
+		segSize = fileSize / int64(cores)
+	} else {
+		segSize = fileSize / int64(width)
+	}
 
 	var segments []*Segment
 	base := int64(0)
@@ -51,7 +56,7 @@ func ReadFileInSegments(fname string, counter *Counter, kf *KeyFinder) error {
 	// Fire 'em off, wait for them to report back
 	ch := make(chan bool) // have fiddled with buffer sizes to no effect
 	for _, segment := range segments {
-		go readAll(segment, counter, kf, ch)
+		go readAll(segment, filter, counter, kf, ch)
 	}
 	for done := 0; done < len(segments); done++ {
 		ok := <-ch
@@ -106,7 +111,7 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 const BUFFERSIZE = 131072
 
 // we've already opened the file and seeked to the right place
-func readAll(s *Segment, counter *Counter, kf *KeyFinder, report chan bool) {
+func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, report chan bool) {
 
 	// noinspection ALL
 	defer s.file.Close()
@@ -123,22 +128,29 @@ func readAll(s *Segment, counter *Counter, kf *KeyFinder, report chan bool) {
 			report <- false
 			return
 		}
+		current += int64(len(record))
+		if !filter.FilterRecord(record) {
+			continue
+		}
 		keyBytes, err := kf.GetKey(record)
 		if err != nil {
 			// bypass
 			_, _ = fmt.Fprintf(os.Stderr, "Can't extract key from %s\n", string(record))
-		} else {
-			keys = append(keys, keyBytes)
-			inBuf += len(record)
+			continue
+		}
+		keyBytes = filter.FilterField(keyBytes)
+		if keyBytes == nil {
+			continue
+		}
+		keys = append(keys, keyBytes)
+		inBuf += len(record)
 
-			if inBuf > BUFFERSIZE {
-				counter.ConcurrentAddKeys(keys)
-				inBuf = 0
-				keys = nil
-			}
+		if inBuf > BUFFERSIZE {
+			counter.ConcurrentAddKeys(keys)
+			inBuf = 0
+			keys = nil
 		}
 
-		current += int64(len(record))
 	}
 	if inBuf > 0 {
 		counter.ConcurrentAddKeys(keys)

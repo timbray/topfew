@@ -6,7 +6,7 @@ import (
 )
 
 func Test1KLinesStream(t *testing.T) {
-	file, err := os.Open("../test/data/access-1k")
+	file, err := os.Open("../test/data/small")
 	if err != nil {
 		t.Error("Can't open file")
 	}
@@ -14,7 +14,8 @@ func Test1KLinesStream(t *testing.T) {
 	defer file.Close()
 
 	kf := NewKeyFinder([]uint{1})
-	x, err := FromStream(file, kf, 5)
+	f := Filters{nil, nil, nil}
+	x, err := FromStream(file, &f, kf, 5)
 	if err != nil {
 		t.Error("OUCH: " + err.Error())
 	}

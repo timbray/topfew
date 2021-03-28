@@ -6,7 +6,7 @@ import (
 )
 
 func TestReadAll(t *testing.T) {
-	file, err := os.Open("../test/data/access-1k")
+	file, err := os.Open("../test/data/small")
 	if err != nil {
 		t.Error("Can't open file")
 		return
@@ -22,7 +22,8 @@ func TestReadAll(t *testing.T) {
 	counter := NewCounter(10)
 	kf := NewKeyFinder([]uint{7})
 	ch := make(chan bool)
-	go readAll(&s, counter, kf, ch)
+	f := Filters{nil, nil, nil}
+	go readAll(&s, &f, counter, kf, ch)
 
 	done := <-ch
 	if !done {
