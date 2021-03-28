@@ -8,7 +8,7 @@ import (
 )
 
 func Test1KLines(t *testing.T) {
-	file, err := os.Open("../test/data/access-1k")
+	file, err := os.Open("../test/data/small")
 	if err != nil {
 		t.Error("Can't open file")
 	}

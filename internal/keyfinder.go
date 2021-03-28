@@ -26,7 +26,10 @@ func NewKeyFinder(keys []uint) *KeyFinder {
 	return &kf
 }
 
-func (kf *KeyFinder) GetKey(record []byte) (key []byte, err error) {
+func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
+	var err error
+	key := make([]byte, 0, 100)
+
 	if kf == nil || len(*kf) == 0 {
 		return record, nil
 	}
@@ -38,7 +41,7 @@ func (kf *KeyFinder) GetKey(record []byte) (key []byte, err error) {
 		for field < int(keyField) {
 			index, err = pass(record, index)
 			if err != nil {
-				return
+				return nil, err
 			}
 			field++
 		}
@@ -50,11 +53,11 @@ func (kf *KeyFinder) GetKey(record []byte) (key []byte, err error) {
 		key, index, err = gather(key, record, index)
 
 		if err != nil {
-			return
+			return nil, err
 		}
 		field++
 	}
-	return
+	return key, err
 }
 
 func gather(key []byte, record []byte, index int) ([]byte, int, error) {

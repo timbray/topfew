@@ -14,7 +14,9 @@ type KeyCount struct {
 // represents a bunch of keys and their occurrence counts, with the highest counts tracked.
 // threshold represents the minimum count value to qualify for consideration as a top count
 // the "top" map represents the keys & counts encountered so far which are higher than threshold
-// TODO: Remember why these are pointers not integers, there was a good reason but I forgot.
+// The hash values are pointers not integers for efficiency reasons so you don't have to update the
+//  map[string] mapping, you just update the number the key maps to.
+
 type Counter struct {
 	counts    map[string]*uint64
 	top       map[string]*uint64
@@ -23,9 +25,9 @@ type Counter struct {
 	lock      sync.Mutex
 }
 
-func NewCounter(size uint) *Counter {
+func NewCounter(size int) *Counter {
 	t := new(Counter)
-	t.size = int(size)
+	t.size = size
 	t.counts = make(map[string]*uint64)
 	t.top = make(map[string]*uint64)
 	return t
@@ -49,7 +51,7 @@ func (t *Counter) Add(bytes []byte) {
 	count, ok := t.counts[string(bytes)]
 	if !ok {
 		var one uint64 = 1
-		count = &one
+		count = &one // a little surprised this works, i.e. you can give a local variable permanent life…
 		t.counts[string(bytes)] = count
 	} else {
 		*count++
