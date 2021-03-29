@@ -2,7 +2,7 @@
 all:	test build linux
 
 test:	internal/*.go
-	cd internal && go test -v
+	cd internal && go test -v && go vet
 
 build:	*/*.go
 	go build -o bin/tf main/main.go
