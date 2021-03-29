@@ -41,14 +41,13 @@ func (f *Filters) FilterRecord(bytes []byte) bool {
 	if f.Greps == nil && f.VGreps == nil {
 		return true
 	}
-	record := string(bytes)
 	for _, re := range f.Greps {
-		if re.FindStringIndex(record) == nil {
+		if !re.Match(bytes) {
 			return false
 		}
 	}
 	for _, re := range f.VGreps {
-		if re.FindStringIndex(record) != nil {
+		if re.Match(bytes) {
 			return false
 		}
 	}
