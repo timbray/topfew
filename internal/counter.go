@@ -72,14 +72,14 @@ func (t *Counter) Add(bytes []byte) {
 	var topList = t.topAsSortedList()
 	topList = topList[0:t.size]
 	t.threshold = topList[len(topList)-1].Count
-	t.top = make(map[string]*uint64)
+	t.top = make(map[string]*uint64, t.size*2)
 	for _, kc := range topList {
 		t.top[kc.Key] = &kc.Count
 	}
 }
 
 func (t *Counter) topAsSortedList() []*KeyCount {
-	var topList []*KeyCount
+	topList := make([]*KeyCount, 0, len(t.top))
 	for key, count := range t.top {
 		topList = append(topList, &KeyCount{key, *count})
 	}
