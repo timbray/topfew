@@ -29,17 +29,16 @@ func NewKeyFinder(keys []uint) *KeyFinder {
 
 // This is applied to every record, so efficiency matters
 func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
-	var err error
-	key := make([]byte, 0, 100)
-
 	// if there are no keyfinders just return the record, minus any trailing newlines
 	if kf == nil || len(*kf) == 0 {
 		if record[len(record)-1] == '\n' {
 			record = record[0 : len(record)-1]
 		}
-		return record, nil
+		return append([]byte(nil), record...), nil
 	}
 
+	var err error
+	key := make([]byte, 0, 100)
 	field := 0
 	index := 0
 	first := true

@@ -124,7 +124,10 @@ func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, repor
 	var keys [][]byte
 	inBuf := 0
 	for current < s.end {
-		record, err := reader.ReadBytes('\n')
+		// ReadSlice re-uses the underlying buffer, so we need to be careful
+		// not to hold onto it longer than the next call to ReadSlice.
+		// In this case GetKey needs to never return a direct slice from record.
+		record, err := reader.ReadSlice('\n')
 		if err != nil && err != io.EOF {
 			// not sure what to do here
 			_, _ = fmt.Fprintf(os.Stderr, "Can't read segment: %s\n", err.Error())
@@ -149,7 +152,7 @@ func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, repor
 		if inBuf > BUFFERSIZE {
 			counter.ConcurrentAddKeys(keys)
 			inBuf = 0
-			keys = nil
+			keys = keys[:0]
 		}
 	}
 	if inBuf > 0 {
