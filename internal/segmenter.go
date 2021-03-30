@@ -9,16 +9,15 @@ import (
 	"runtime"
 )
 
+// represents a segment of a file. Is required to begin at the start of a line, i.e. start of file or
+//  after a \n.
 type Segment struct {
 	start int64
 	end   int64
 	file  *os.File
 }
 
-/**
- * The idea is that we break the file up into segments, one for each core that Golang thinks the machine
- *  has, and read them in parallel
- */
+// The idea is that we break the file up into segments and read them in parallel
 func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *KeyFinder, width int) error {
 
 	// find file size
@@ -33,6 +32,8 @@ func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *Key
 	fileSize := info.Size()
 	_ = file.Close()
 
+	// if user doesn't specify segment parallelism, we ask Go how many cores it thinks the CPU has and
+	//  assign one segment per CPU
 	var segSize int64
 	if width == 0 {
 		cores := runtime.NumCPU()
@@ -41,10 +42,11 @@ func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *Key
 		segSize = fileSize / int64(width)
 	}
 
+	// compute segments and put them in a slice
 	var segments []*Segment
 	base := int64(0)
 	for base < fileSize {
-
+		// each segment starts at the beginning of a line and ends after a newline (or at EOF)
 		segment, err := newSegment(fname, base, base+segSize)
 		if err != nil {
 			return err
@@ -82,7 +84,7 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 	if end >= fileSize {
 		end = fileSize
 	} else {
-
+		// seek to near where we want the end to be, then peek forrward to find a line-end
 		offset, err = file.Seek(end, 0)
 		if err != nil {
 			return nil, err
@@ -91,12 +93,14 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 			return nil, errors.New(fmt.Sprintf("tried to seek to %d, went to %d", end, offset))
 		}
 		tillNL, err := reader.ReadBytes('\n')
-
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
+
 		end += int64(len(tillNL))
 	}
+
+	// now seek back to the beginning of the file to get ready for reading
 	offset, err = file.Seek(start, 0)
 	if err != nil {
 		return nil, err
@@ -107,7 +111,6 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 	return &Segment{start, end, file}, nil
 }
 
-//const BUFFERSIZE = 65536
 const BUFFERSIZE = 131072
 
 // we've already opened the file and seeked to the right place
@@ -138,19 +141,16 @@ func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, repor
 			_, _ = fmt.Fprintf(os.Stderr, "Can't extract key from %s\n", string(record))
 			continue
 		}
-		keyBytes = filter.FilterField(keyBytes)
-		if keyBytes == nil {
-			continue
-		}
-		keys = append(keys, keyBytes)
+		keys = append(keys, filter.FilterField(keyBytes))
 		inBuf += len(record)
 
+		// we need to go through a mutex and transfer control to another thread to invoke the
+		// the top-occurrence counter, so we'll buffer them up.
 		if inBuf > BUFFERSIZE {
 			counter.ConcurrentAddKeys(keys)
 			inBuf = 0
 			keys = nil
 		}
-
 	}
 	if inBuf > 0 {
 		counter.ConcurrentAddKeys(keys)

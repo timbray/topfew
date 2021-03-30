@@ -10,8 +10,9 @@ import (
 	"errors"
 )
 
-const NER = "not enough records"
+const NER = "not enough bytes in record"
 
+// just a slice of small integers representing field numbers; 1-based on the command line, 0-based here
 type KeyFinder []uint
 
 func NewKeyFinder(keys []uint) *KeyFinder {
@@ -26,18 +27,27 @@ func NewKeyFinder(keys []uint) *KeyFinder {
 	return &kf
 }
 
+// This is applied to every record, so efficiency matters
 func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
 	var err error
 	key := make([]byte, 0, 100)
 
+	// if there are no keyfinders just return the record, minus any trailing newlines
 	if kf == nil || len(*kf) == 0 {
+		if record[len(record)-1] == '\n' {
+			record = record[0 : len(record)-1]
+		}
 		return record, nil
 	}
 
 	field := 0
 	index := 0
 	first := true
+
+	// for each field in the key
 	for _, keyField := range *kf {
+
+		// bypass fields before the one we want
 		for field < int(keyField) {
 			index, err = pass(record, index)
 			if err != nil {
@@ -45,21 +55,26 @@ func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
 			}
 			field++
 		}
+
+		// join(' ', keyfields)
 		if first {
 			first = false
 		} else {
 			key = append(key, ' ')
 		}
-		key, index, err = gather(key, record, index)
 
+		// attach desired field to key
+		key, index, err = gather(key, record, index)
 		if err != nil {
 			return nil, err
 		}
+
 		field++
 	}
 	return key, err
 }
 
+// pull in the bytes from a desired field
 func gather(key []byte, record []byte, index int) ([]byte, int, error) {
 
 	// eat leading space
@@ -69,6 +84,8 @@ func gather(key []byte, record []byte, index int) ([]byte, int, error) {
 	if index == len(record) {
 		return nil, 0, errors.New(NER)
 	}
+
+	// copy key bytes
 	for index < len(record) && record[index] != ' ' && record[index] != '\t' && record[index] != '\n' {
 		key = append(key, record[index])
 		index++

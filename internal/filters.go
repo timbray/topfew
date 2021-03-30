@@ -4,10 +4,13 @@ import (
 	"regexp"
 )
 
+// represents a sed(1) s/a/b/g operation
 type Sed struct {
 	ReplaceThis *regexp.Regexp
 	WithThat    []byte
 }
+
+// contains the filters to be applied prior to top-few computation
 type Filters struct {
 	Greps  []*regexp.Regexp
 	VGreps []*regexp.Regexp
@@ -28,7 +31,6 @@ func (f *Filters) AddGrep(s string) error {
 	}
 	return err
 }
-
 func (f *Filters) AddVgrep(s string) error {
 	re, err := regexp.Compile(s)
 	if err == nil {

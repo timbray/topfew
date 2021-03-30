@@ -7,6 +7,7 @@ import (
 	"io"
 )
 
+// print out what amounts to a debugging feed, showing how the filtering and keyrewriting are working
 func Sample(ioReader io.Reader, filters *Filters, kf *KeyFinder) error {
 
 	reader := bufio.NewReader(ioReader)
