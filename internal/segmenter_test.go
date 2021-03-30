@@ -2,6 +2,7 @@ package topfew
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -54,5 +55,28 @@ func TestReadAll(t *testing.T) {
 	}
 	if len(want) != 0 {
 		t.Errorf("Remaining %d", len(want))
+	}
+}
+
+func TestReadAllLongLine(t *testing.T) {
+	counter := NewCounter(10)
+	err := ReadFileInSegments("../test/data/long_lines", &Filters{}, counter, nil, 1)
+	if err != nil {
+		t.Fatalf("Failed to process file %v", err)
+	}
+	res := counter.GetTop()
+	a := strings.Repeat("a", 5000)
+	b := strings.Repeat("b", 8900)
+	if len(res) != 3 {
+		t.Errorf("Expecting 3 results, but got %d", len(res))
+	} else {
+		for i, exp := range []KeyCount{{"cc", 5}, {a, 3}, {b, 2}} {
+			if exp.Key != res[i].Key {
+				t.Errorf("Unexpected key %v at index %d, expecting %v", res[i].Key, i, exp.Key)
+			}
+			if exp.Count != res[i].Count {
+				t.Errorf("Unexpected count of %d at index %d, expecting %d", res[i].Count, i, exp.Count)
+			}
+		}
 	}
 }
