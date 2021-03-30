@@ -144,7 +144,7 @@ func main() {
 	}
 
 	for _, kc := range topList {
-		fmt.Printf("%d %s\n", kc.Count, kc.Key)
+		fmt.Printf("%d %s\n", *kc.Count, kc.Key)
 	}
 }
 
