@@ -32,7 +32,7 @@ func Test1KLinesStream(t *testing.T) {
 	}
 
 	for _, kc := range x {
-		if kc.Count != uint64(wanted[kc.Key]) {
+		if *kc.Count != uint64(wanted[kc.Key]) {
 			t.Error("Wrong count for key: " + kc.Key)
 		}
 	}

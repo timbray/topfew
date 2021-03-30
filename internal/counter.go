@@ -8,7 +8,7 @@ import (
 // represents a key's occurrence count
 type KeyCount struct {
 	Key   string
-	Count uint64
+	Count *uint64
 }
 
 // represents a bunch of keys and their occurrence counts, with the highest counts tracked.
@@ -61,7 +61,10 @@ func (t *Counter) Add(bytes []byte) {
 	if *count < t.threshold {
 		return
 	}
-	t.top[string(bytes)] = count
+	_, ok = t.top[string(bytes)]
+	if !ok {
+		t.top[string(bytes)] = count
+	}
 
 	// has the top set grown enough to compress?
 	if len(t.top) < (t.size * 2) {
@@ -71,20 +74,20 @@ func (t *Counter) Add(bytes []byte) {
 	// sort the top candidates, shrink the list to the top t.size, put them back in a map
 	var topList = t.topAsSortedList()
 	topList = topList[0:t.size]
-	t.threshold = topList[len(topList)-1].Count
+	t.threshold = *(topList[len(topList)-1].Count)
 	t.top = make(map[string]*uint64, t.size*2)
 	for _, kc := range topList {
-		t.top[kc.Key] = &kc.Count
+		t.top[kc.Key] = kc.Count
 	}
 }
 
 func (t *Counter) topAsSortedList() []*KeyCount {
 	topList := make([]*KeyCount, 0, len(t.top))
 	for key, count := range t.top {
-		topList = append(topList, &KeyCount{key, *count})
+		topList = append(topList, &KeyCount{key, count})
 	}
 	sort.Slice(topList, func(k1, k2 int) bool {
-		return topList[k1].Count > topList[k2].Count
+		return *topList[k1].Count > *topList[k2].Count
 	})
 	return topList
 }

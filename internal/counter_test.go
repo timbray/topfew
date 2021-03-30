@@ -41,7 +41,7 @@ func Test1KLines(t *testing.T) {
 	}
 
 	for _, kc := range x {
-		if kc.Count != uint64(wanted[kc.Key]) {
+		if *kc.Count != uint64(wanted[kc.Key]) {
 			t.Error("Wrong count for key: " + kc.Key)
 		}
 	}
@@ -62,19 +62,25 @@ func TestTable_Add(t *testing.T) {
 		table.Add([]byte(key))
 	}
 	x := table.GetTop()
+	n4 := uint64(4)
+	n5 := uint64(5)
+	n6 := uint64(6)
+	n7 := uint64(7)
+	n8 := uint64(8)
+
 	wanted := []KeyCount{
-		{"c", 8},
-		{"g", 7},
-		{"e", 6},
-		{"f", 5},
-		{"a", 4},
+		{"c", &n8},
+		{"g", &n7},
+		{"e", &n6},
+		{"f", &n5},
+		{"a", &n4},
 	}
 	if len(x) != len(wanted) {
 		t.Error("lengths don't match")
 	}
 	// shouldn't deepEqual do this?
 	for i := 0; i < len(wanted); i++ {
-		if x[i].Key != wanted[i].Key || x[i].Count != wanted[i].Count {
+		if x[i].Key != wanted[i].Key || *x[i].Count != *wanted[i].Count {
 			t.Errorf("Mismatch at index %d", i)
 		}
 	}
@@ -85,12 +91,12 @@ func TestTable_Add(t *testing.T) {
 	}
 	x = table.GetTop()
 	wanted = []KeyCount{
-		{"c", 8},
-		{"g", 7},
-		{"e", 6},
+		{"c", &n8},
+		{"g", &n7},
+		{"e", &n6},
 	}
 	for i := 0; i < len(wanted); i++ {
-		if x[i].Key != wanted[i].Key || x[i].Count != wanted[i].Count {
+		if x[i].Key != wanted[i].Key || *x[i].Count != *wanted[i].Count {
 			t.Errorf("Mismatch at index %d", i)
 		}
 	}

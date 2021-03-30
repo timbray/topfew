@@ -49,7 +49,7 @@ func TestReadAll(t *testing.T) {
 		} else {
 			delete(want, kc.Key)
 		}
-		if kc.Count != 1 {
+		if *kc.Count != 1 {
 			t.Errorf("Bogus count, should be 1: %d", kc.Count)
 		}
 	}
@@ -67,14 +67,17 @@ func TestReadAllLongLine(t *testing.T) {
 	res := counter.GetTop()
 	a := strings.Repeat("a", 5000)
 	b := strings.Repeat("b", 8900)
+	n5 := uint64(5)
+	n3 := uint64(3)
+	n2 := uint64(2)
 	if len(res) != 3 {
 		t.Errorf("Expecting 3 results, but got %d", len(res))
 	} else {
-		for i, exp := range []KeyCount{{"cc", 5}, {a, 3}, {b, 2}} {
+		for i, exp := range []KeyCount{{"cc", &n5}, {a, &n3}, {b, &n2}} {
 			if exp.Key != res[i].Key {
 				t.Errorf("Unexpected key %v at index %d, expecting %v", res[i].Key, i, exp.Key)
 			}
-			if exp.Count != res[i].Count {
+			if *exp.Count != *res[i].Count {
 				t.Errorf("Unexpected count of %d at index %d, expecting %d", res[i].Count, i, exp.Count)
 			}
 		}
