@@ -75,7 +75,7 @@ func TestTable_Add(t *testing.T) {
 	// shouldn't deepEqual do this?
 	for i := 0; i < len(wanted); i++ {
 		if x[i].Key != wanted[i].Key || x[i].Count != wanted[i].Count {
-			t.Error("Mismatch at index" + string(i))
+			t.Errorf("Mismatch at index %d", i)
 		}
 	}
 
@@ -91,7 +91,7 @@ func TestTable_Add(t *testing.T) {
 	}
 	for i := 0; i < len(wanted); i++ {
 		if x[i].Key != wanted[i].Key || x[i].Count != wanted[i].Count {
-			t.Error("Mismatch at index" + string(i))
+			t.Errorf("Mismatch at index %d", i)
 		}
 	}
 
