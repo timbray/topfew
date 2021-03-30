@@ -128,6 +128,15 @@ func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, repor
 		// to be careful about how long we hang onto the record slice.
 		// In this case GetKey needs to never return a direct subslice of the record.
 		record, err := reader.ReadSlice('\n')
+		// ReadSlice returns an error if a line doesn't fit in its buffer. We
+		// deal with that by switching to ReadBytes to get the remainder of the line.
+		if err == bufio.ErrBufferFull {
+			// Copy record because ReadBytes is going to overwrite it, and it contains
+			// the start of the current line.
+			linestart := append([]byte(nil), record...)
+			record, err = reader.ReadBytes('\n')
+			record = append(linestart, record...)
+		}
 		if err != nil && err != io.EOF {
 			// not sure what to do here
 			_, _ = fmt.Fprintf(os.Stderr, "Can't read segment: %s\n", err.Error())
