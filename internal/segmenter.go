@@ -124,9 +124,9 @@ func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, repor
 	var keys [][]byte
 	inBuf := 0
 	for current < s.end {
-		// ReadSlice re-uses the underlying buffer, so we need to be careful
-		// not to hold onto it longer than the next call to ReadSlice.
-		// In this case GetKey needs to never return a direct slice from record.
+		// ReadSlice results are only valid until the next call to Read, so we
+		// to be careful about how long we hang onto the record slice.
+		// In this case GetKey needs to never return a direct subslice of the record.
 		record, err := reader.ReadSlice('\n')
 		if err != nil && err != io.EOF {
 			// not sure what to do here

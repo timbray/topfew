@@ -34,6 +34,8 @@ func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
 		if record[len(record)-1] == '\n' {
 			record = record[0 : len(record)-1]
 		}
+		// Make a copy of record as record is a pointing at a buffer that will be reused
+		// and the caller is going to hang onto this.
 		return append([]byte(nil), record...), nil
 	}
 
