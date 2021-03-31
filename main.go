@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"runtime/pprof"
@@ -69,7 +68,7 @@ func main() {
 			i++
 			size, err = strconv.Atoi(os.Args[i])
 			if err == nil && size < 1 {
-				err = errors.New(fmt.Sprintf("invalid size %d", size))
+				err = fmt.Errorf("invalid size %d", size)
 			}
 		case arg == "-f" || arg == "--fields":
 			i++
@@ -97,7 +96,7 @@ func main() {
 			i++
 			width, err = strconv.Atoi(os.Args[i])
 			if err == nil && size < 1 {
-				err = errors.New(fmt.Sprintf("invalid size %d", size))
+				err = fmt.Errorf("invalid size %d", size)
 			}
 
 		default:
@@ -173,7 +172,7 @@ func parseFields(spec string) ([]uint, error) {
 	for _, part := range parts {
 		num, err := strconv.Atoi(part)
 		if err != nil {
-			return nil, errors.New("Illegal field spec: " + err.Error())
+			return nil, fmt.Errorf("Illegal field spec: %v", err)
 		}
 		fields = append(fields, uint(num))
 	}
