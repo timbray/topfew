@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/pprof"
+	"runtime/trace"
 	"strconv"
 	"strings"
 
@@ -54,6 +55,7 @@ func main() {
 	var err error
 	var fields []uint
 	var cpuprofile string
+	var tracefname string
 	var fname string
 	var filter topfew.Filters
 	sample := false
@@ -75,6 +77,9 @@ func main() {
 		case arg == "--cpuprofile":
 			i++
 			cpuprofile = os.Args[i]
+		case arg == "--trace":
+			i++
+			tracefname = os.Args[i]
 		case arg == "-g" || arg == "--grep":
 			i++
 			err = filter.AddGrep(os.Args[i])
@@ -121,7 +126,16 @@ func main() {
 		}
 		defer pprof.StopCPUProfile()
 	}
-
+	if tracefname != "" {
+		f, err := os.Create(tracefname)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "can't create trace output file: %s", err.Error())
+			return
+		}
+		// The generated trace can be analyzed with: go tool trace <tracefile>
+		trace.Start(f)
+		defer trace.Stop()
+	}
 	var kf = topfew.NewKeyFinder(fields)
 	var topList []*topfew.KeyCount
 
