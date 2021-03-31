@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	topfew "github.com/timbray/topfew/internal"
 	"os"
 	"runtime/pprof"
 	"strconv"
 	"strings"
+
+	topfew "github.com/timbray/topfew/internal"
 )
 
 const instructions = `
@@ -95,7 +96,11 @@ func main() {
 			}
 
 		default:
-			fname = os.Args[i]
+			if arg[0] == '-' {
+				err = fmt.Errorf("Unexpected flag argument %v", arg)
+			} else {
+				fname = os.Args[i]
+			}
 		}
 		if err != nil {
 			usage(err)
