@@ -56,15 +56,16 @@ func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *Key
 	}
 
 	// Fire 'em off, wait for them to report back
-	ch := make(chan bool) // have fiddled with buffer sizes to no effect
+	ch := make(chan segmentResult)
 	for _, segment := range segments {
-		go readAll(segment, filter, counter, kf, ch)
+		go readAll(segment, filter, kf, ch)
 	}
 	for done := 0; done < len(segments); done++ {
-		ok := <-ch
-		if !ok {
-			return errors.New("botched return from segment")
+		res := <-ch
+		if res.err != nil {
+			return err
 		}
+		counter.merge(res.counters)
 	}
 	return nil
 }
@@ -84,7 +85,7 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 	if end >= fileSize {
 		end = fileSize
 	} else {
-		// seek to near where we want the end to be, then peek forrward to find a line-end
+		// seek to near where we want the end to be, then peek forward to find a line-end
 		offset, err = file.Seek(end, 0)
 		if err != nil {
 			return nil, err
@@ -111,18 +112,20 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 	return &Segment{start, end, file}, nil
 }
 
-const BUFFERSIZE = 131072
+type segmentResult struct {
+	// one of these will be set
+	err      error
+	counters segmentCounter
+}
 
 // we've already opened the file and seeked to the right place
-func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, report chan bool) {
-
+func readAll(s *Segment, filter *Filters, kf *KeyFinder, reportCh chan segmentResult) {
 	// noinspection ALL
 	defer s.file.Close()
 
-	reader := bufio.NewReader(s.file)
+	reader := bufio.NewReaderSize(s.file, 16*1024)
 	current := s.start
-	var keys [][]byte
-	inBuf := 0
+	counters := newSegmentCounter()
 	for current < s.end {
 		// ReadSlice results are only valid until the next call to Read, so we
 		// to be careful about how long we hang onto the record slice.
@@ -138,9 +141,7 @@ func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, repor
 			record = append(linestart, record...)
 		}
 		if err != nil && err != io.EOF {
-			// not sure what to do here
-			_, _ = fmt.Fprintf(os.Stderr, "Can't read segment: %s\n", err.Error())
-			report <- false
+			reportCh <- segmentResult{err: fmt.Errorf("Can't read segment: %v", err)}
 			return
 		}
 		current += int64(len(record))
@@ -153,20 +154,8 @@ func readAll(s *Segment, filter *Filters, counter *Counter, kf *KeyFinder, repor
 			_, _ = fmt.Fprintf(os.Stderr, "Can't extract key from %s\n", string(record))
 			continue
 		}
-		keys = append(keys, filter.FilterField(keyBytes))
-		inBuf += len(record)
-
-		// we need to go through a mutex and transfer control to another thread to invoke the
-		// the top-occurrence counter, so we'll buffer them up.
-		if inBuf > BUFFERSIZE {
-			counter.ConcurrentAddKeys(keys)
-			inBuf = 0
-			keys = keys[:0]
-		}
-	}
-	if inBuf > 0 {
-		counter.ConcurrentAddKeys(keys)
+		counters.Add(filter.FilterField(keyBytes))
 	}
 
-	report <- true
+	reportCh <- segmentResult{counters: counters}
 }
