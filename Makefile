@@ -1,3 +1,4 @@
+.PHONY: test
 
 all:	test build linux
 
