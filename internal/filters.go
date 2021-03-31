@@ -4,19 +4,20 @@ import (
 	"regexp"
 )
 
-// represents a sed(1) s/a/b/g operation
+// Sed represents a sed(1) s/a/b/g operation.
 type Sed struct {
 	ReplaceThis *regexp.Regexp
 	WithThat    []byte
 }
 
-// contains the filters to be applied prior to top-few computation
+// Filters contains the filters to be applied prior to top-few computation.
 type Filters struct {
 	Greps  []*regexp.Regexp
 	VGreps []*regexp.Regexp
 	Seds   []*Sed
 }
 
+// AddSed appends a new Sed operation to the filters.
 func (f *Filters) AddSed(replaceThis string, withThat string) error {
 	re, err := regexp.Compile(replaceThis)
 	if err == nil {
@@ -24,6 +25,9 @@ func (f *Filters) AddSed(replaceThis string, withThat string) error {
 	}
 	return err
 }
+
+// AddGrep appends a new grep/regex to the filters. Only items that match
+// this regex will be counted.
 func (f *Filters) AddGrep(s string) error {
 	re, err := regexp.Compile(s)
 	if err == nil {
@@ -31,6 +35,9 @@ func (f *Filters) AddGrep(s string) error {
 	}
 	return err
 }
+
+// AddVgrep appends a new inverse grep/regex to the filters (ala grep -v).
+// Only items that don't match the regex will be counted.
 func (f *Filters) AddVgrep(s string) error {
 	re, err := regexp.Compile(s)
 	if err == nil {
@@ -39,6 +46,8 @@ func (f *Filters) AddVgrep(s string) error {
 	return err
 }
 
+// FilterRecord returns true if the supplied record passes all the filter
+// criteria.
 func (f *Filters) FilterRecord(bytes []byte) bool {
 	if f.Greps == nil && f.VGreps == nil {
 		return true
@@ -56,6 +65,7 @@ func (f *Filters) FilterRecord(bytes []byte) bool {
 	return true
 }
 
+// FilterField returns a key that has had all the sed operations applied to it.
 func (f *Filters) FilterField(bytes []byte) []byte {
 	for _, sed := range f.Seds {
 		bytes = sed.ReplaceThis.ReplaceAll(bytes, sed.WithThat)

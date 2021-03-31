@@ -10,11 +10,13 @@ import (
 	"errors"
 )
 
+// NER is the error message returned when the input has less fields than the KeyFinder is configured for.
 const NER = "not enough bytes in record"
 
-// just a slice of small integers representing field numbers; 1-based on the command line, 0-based here
+// KeyFinder is a slice of small integers representing field numbers; 1-based on the command line, 0-based here.
 type KeyFinder []uint
 
+// NewKeyFinder creates a new key finder with the supplied field numbers, the input should be 1 based.
 func NewKeyFinder(keys []uint) *KeyFinder {
 	if keys == nil {
 		return nil
@@ -27,7 +29,8 @@ func NewKeyFinder(keys []uint) *KeyFinder {
 	return &kf
 }
 
-// This is applied to every record, so efficiency matters
+// GetKey extracts a key from the supplied record. This is applied to every record,
+// so efficiency matters
 func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
 	// if there are no keyfinders just return the record, minus any trailing newlines
 	if kf == nil || len(*kf) == 0 {

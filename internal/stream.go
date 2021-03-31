@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// read a stream and hand each line to the top-occurrence counter. Really only used on stdin.
+// FromStream reads a stream and hand each line to the top-occurrence counter. Really only used on stdin.
 func FromStream(ioReader io.Reader, filters *Filters, kf *KeyFinder, size int) ([]*KeyCount, error) {
 
 	counter := NewCounter(size)

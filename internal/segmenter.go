@@ -9,15 +9,16 @@ import (
 	"runtime"
 )
 
-// represents a segment of a file. Is required to begin at the start of a line, i.e. start of file or
-//  after a \n.
+// Segment represents a segment of a file. Is required to begin at the start of a line, i.e. start of file or
+// after a \n.
 type Segment struct {
 	start int64
 	end   int64
 	file  *os.File
 }
 
-// The idea is that we break the file up into segments and read them in parallel
+// ReadFileInSegments breaks the file up into multiple segments and then reads them in parallel. counter
+// will be updated with the resulting occurrence counts.
 func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *KeyFinder, width int) error {
 
 	// find file size

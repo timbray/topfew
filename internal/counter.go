@@ -4,7 +4,7 @@ import (
 	"sort"
 )
 
-// KeyCount represents a key's occurrence count
+// KeyCount represents a key's occurrence count.
 type KeyCount struct {
 	Key   string
 	Count *uint64
@@ -14,7 +14,7 @@ type KeyCount struct {
 // threshold represents the minimum count value to qualify for consideration as a top count
 // the "top" map represents the keys & counts encountered so far which are higher than threshold
 // The hash values are pointers not integers for efficiency reasons so you don't have to update the
-//  map[string] mapping, you just update the number the key maps to.
+// map[string] mapping, you just update the number the key maps to.
 type Counter struct {
 	counts    map[string]*uint64
 	top       map[string]*uint64
@@ -22,6 +22,7 @@ type Counter struct {
 	size      int
 }
 
+// NewCounter creates a new empty counter, ready for use. size controls how many top items to track.
 func NewCounter(size int) *Counter {
 	t := new(Counter)
 	t.size = size
@@ -30,6 +31,7 @@ func NewCounter(size int) *Counter {
 	return t
 }
 
+// Add one occurrence to the counts for the indicated key.
 func (t *Counter) Add(bytes []byte) {
 	// note the call with a byte slice rather than the string because of
 	//  https://github.com/golang/go/commit/f5f5a8b6209f84961687d993b93ea0d397f5d5bf
@@ -81,6 +83,7 @@ func (t *Counter) topAsSortedList() []*KeyCount {
 	return topList
 }
 
+// GetTop returns the top occuring keys & counts in order, with highest count first.
 func (t *Counter) GetTop() []*KeyCount {
 	topList := t.topAsSortedList()
 	if len(topList) > t.size {
