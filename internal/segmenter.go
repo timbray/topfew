@@ -2,7 +2,6 @@ package topfew
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -92,7 +91,7 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 			return nil, err
 		}
 		if offset != end {
-			return nil, errors.New(fmt.Sprintf("tried to seek to %d, went to %d", end, offset))
+			return nil, fmt.Errorf("tried to seek to %d, went to %d", end, offset)
 		}
 		tillNL, err := reader.ReadBytes('\n')
 		if err != nil && err != io.EOF {
@@ -108,7 +107,7 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 		return nil, err
 	}
 	if offset != start {
-		return nil, errors.New(fmt.Sprintf("tried to seek to %d, went to %d", start, offset))
+		return nil, fmt.Errorf("tried to seek to %d, went to %d", start, offset)
 	}
 	return &Segment{start, end, file}, nil
 }
