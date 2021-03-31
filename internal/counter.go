@@ -85,34 +85,33 @@ func (t *Counter) GetTop() []*KeyCount {
 	topList := t.topAsSortedList()
 	if len(topList) > t.size {
 		return topList[0:t.size]
-	} else {
-		return topList
 	}
+	return topList
 }
 
 // merge applies the counts from the SegmentCounter into the Counter.
 // Once merged, the SegmentCounter should be discarded.
-func (t *Counter) merge(r segmentCounter) {
-	for r_key, r_count := range r {
+func (t *Counter) merge(segCounter segmentCounter) {
+	for segKey, segCount := range segCounter {
 		// Annoyingly we can't efficiently call Add here because we have
 		// a string not a []byte
-		count, existing_key := t.counts[r_key]
-		if !existing_key {
-			count = r_count
-			t.counts[r_key] = r_count
+		count, existingKey := t.counts[segKey]
+		if !existingKey {
+			count = segCount
+			t.counts[segKey] = segCount
 		} else {
-			*count += *r_count
+			*count += *segCount
 		}
 
 		// big enough to be a top candidate?
 		if *count >= t.threshold {
 			// if it wasn't in t.counts then we already know its not in
 			// t.top
-			if existing_key {
-				_, existing_key = t.top[r_key]
+			if existingKey {
+				_, existingKey = t.top[segKey]
 			}
-			if !existing_key {
-				t.top[r_key] = count
+			if !existingKey {
+				t.top[segKey] = count
 				// has the top set grown enough to compress?
 				if len(t.top) >= (t.size * 2) {
 					t.compact()
