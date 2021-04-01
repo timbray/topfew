@@ -61,7 +61,7 @@ func TestReadAll(t *testing.T) {
 
 func TestReadAllLongLine(t *testing.T) {
 	counter := NewCounter(10)
-	err := ReadFileInSegments("../test/data/long_lines", &Filters{}, counter, nil, 1)
+	err := ReadFileInSegments("../test/data/long_lines", &Filters{}, counter, NewKeyFinder(nil), 1)
 	if err != nil {
 		t.Fatalf("Failed to process file %v", err)
 	}

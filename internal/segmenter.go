@@ -126,10 +126,12 @@ func readAll(s *Segment, filter *Filters, kf *KeyFinder, reportCh chan segmentRe
 	reader := bufio.NewReaderSize(s.file, 16*1024)
 	current := s.start
 	counters := newSegmentCounter()
+	kf = kf.Clone()
 	for current < s.end {
-		// ReadSlice results are only valid until the next call to Read, so we
-		// to be careful about how long we hang onto the record slice.
-		// In this case GetKey needs to never return a direct subslice of the record.
+		// ReadSlice results are only valid until the next call to Read, so we need
+		// to be careful about how long we hang onto the record slice. The SegmentCounter
+		// is the only thing that holds onto data from record, and it has to make a copy
+		// anyway when it constructs its string key. So this is safe.
 		record, err := reader.ReadSlice('\n')
 		// ReadSlice returns an error if a line doesn't fit in its buffer. We
 		// deal with that by switching to ReadBytes to get the remainder of the line.
