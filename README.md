@@ -24,7 +24,8 @@ default value is 10.
 `-f fieldlist, --fields fieldlist` Specifies which fields should be extracted from incoming records
 and used in computing occurrence counts. The fieldlist must be a
 comma‐separated  list  of  integers  identifying  field numbers,
-which start at one, for example 3 and 2,5,6.
+which start at one, for example 3 and 2,5,6.  The fields
+must be provided in order, so 3,1,7 is an error.
 
 If no fieldlist is provided, **tf** treats the whole input record as a single field.
 

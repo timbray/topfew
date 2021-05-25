@@ -39,7 +39,7 @@ value is 10.
 Specifies which fields should be extracted from incoming records and used in
 computing occurrence counts. The fieldlist must be a comma-separated list of
 integers identifying field numbers, which start at one, for example \fB3\fR and
-\fB2,5,6\fR.
+\fB2,5,6\fR.  The fields must be provided in order, so \fB3,1,7\fR is an error.
 
 If no fieldlist is provided, \fBtf\fR treats the whole input record as a single
 field.

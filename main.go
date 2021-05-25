@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime/pprof"
@@ -23,7 +24,8 @@ Usage: tf
 	-h, -help, --help
 	(filename) [optional, stdin if omitted]
 
-Field list is comma-separated integers, e.g. -f 3 or --fields 1,3,7
+Field list is comma-separated integers, e.g. -f 3 or --fields 1,3,7. The fields
+must be provided in order, so 3,1,7 is an error.
 
 The regexp-valued fields work as follows:
 -g/--grep discardsrecords that don't match the regexp (g for grep)
@@ -132,7 +134,11 @@ func main() {
 			return
 		}
 		// The generated trace can be analyzed with: go tool trace <tracefile>
-		trace.Start(f)
+		err = trace.Start(f)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "can't start tracing: %s", err.Error())
+			return
+		}
 		defer trace.Stop()
 	}
 	var kf = topfew.NewKeyFinder(fields)
@@ -169,10 +175,16 @@ func main() {
 func parseFields(spec string) ([]uint, error) {
 	parts := strings.Split(spec, ",")
 	var fields []uint
+	lastNum := -1
 	for _, part := range parts {
 		num, err := strconv.Atoi(part)
 		if err != nil {
 			return nil, fmt.Errorf("Illegal field spec: %v", err)
+		}
+		if num <= lastNum {
+			return nil, errors.New(fmt.Sprintf( "field-number list must be in order; problem at \"%d\":", num))
+		} else {
+			lastNum = num
 		}
 		fields = append(fields, uint(num))
 	}
