@@ -13,7 +13,7 @@ type KeyCount struct {
 // Counter represents a bunch of keys and their occurrence counts, with the highest counts tracked.
 // threshold represents the minimum count value to qualify for consideration as a top count
 // the "top" map represents the keys & counts encountered so far which are higher than threshold
-// The hash values are pointers not integers for efficiency reasons so you don't have to update the
+// The hash values are pointers not integers for efficiency reasons, so you don't have to update the
 // map[string] mapping, you just update the number the key maps to.
 type Counter struct {
 	counts    map[string]*uint64
@@ -22,7 +22,7 @@ type Counter struct {
 	size      int
 }
 
-// NewCounter creates a new empty counter, ready for use. size controls how many top items to track.
+// NewCounter creates a new empty counter, ready for use. Size controls how many top items to track.
 func NewCounter(size int) *Counter {
 	t := new(Counter)
 	t.size = size
@@ -62,7 +62,7 @@ func (t *Counter) Add(bytes []byte) {
 }
 
 func (t *Counter) compact() {
-	// sort the top candidates, shrink the list to the top t.size, put them back in a map
+	// sort the top candidates, shrink the list to the top t.Size, put them back in a map
 	var topList = t.topAsSortedList()
 	topList = topList[0:t.size]
 	t.threshold = *(topList[len(topList)-1].Count)
@@ -83,7 +83,7 @@ func (t *Counter) topAsSortedList() []*KeyCount {
 	return topList
 }
 
-// GetTop returns the top occuring keys & counts in order, with highest count first.
+// GetTop returns the top occurring keys & counts in order of descending count
 func (t *Counter) GetTop() []*KeyCount {
 	topList := t.topAsSortedList()
 	if len(topList) > t.size {
@@ -108,7 +108,7 @@ func (t *Counter) merge(segCounter segmentCounter) {
 
 		// big enough to be a top candidate?
 		if *count >= t.threshold {
-			// if it wasn't in t.counts then we already know its not in
+			// if it wasn't in t.counts then we already know it's not in
 			// t.top
 			if existingKey {
 				_, existingKey = t.top[segKey]

@@ -34,7 +34,6 @@ func TestSeds(t *testing.T) {
 }
 
 func TestFilterCombos(t *testing.T) {
-
 	lines := []string{
 		/*0*/ "96.48.229.116 - - [04/May/2020:06:36:20 -0700] \"GET /ongoing/in-feed.xml HTTP/1.1\" 200 781 \"https://old.tbray.org/ongoing/When/202x/2020/04/29/Leaving-Amazon\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.113 Safari/537.36\"\n",
 		/*1*/ "151.225.84.185 - - [04/May/2020:06:47:04 -0700] \"GET /ongoing/ongoing.js HTTP/1.1\" 200 2477 \"https://www.tbray.org/ongoing/When/202x/2020/04/29/Leaving-Amazon\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Safari/605.1.15\"\n",
@@ -46,7 +45,7 @@ func TestFilterCombos(t *testing.T) {
 	}
 
 	/*
-		fields := []string{
+		Fields := []string{
 			"foo",         // 0
 			"bar",         // 1
 			"donkey",      // 2
@@ -137,5 +136,4 @@ func TestFilterCombos(t *testing.T) {
 	if matched != 1 {
 		t.Errorf("Matched was %d wanted 4", matched)
 	}
-
 }

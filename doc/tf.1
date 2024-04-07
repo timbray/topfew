@@ -1,99 +1,97 @@
-.\" -*- coding: us-ascii -*-
-.if \n(.g .ds T< \\FC
-.if \n(.g .ds T> \\F[\n[.fam]]
-.de URL
-\\$2 \(la\\$1\(ra\\$3
-..
-.if \n(.g .mso www.tmac
-.TH TF 1 "March 26, 2021" "" ""
-.SH NAME
-tf \- Finds fields with the highest number of occurrences
-.SH SYNOPSIS
-'nh
-.fi
-.ad l
-\fBtf\fR \kx
-.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
-'in \n(.iu+\nxu
-[\fB-n\fR] [\fB-h\fR] [\fB--sample\fR] [\fB-g \fIregexp\fB\fR]* [\fB-sed \fIregexp replacement\fB\fR]*
-'in \n(.iu-\nxu
-.ad b
-'hy
-.SH DESCRIPTION
-\fBtf\fR (short for \fBt\fRop\fBf\fRew reads a named file or the standard input,
-selects one or more fields from each line, and prints a list of the selected fields
-which have the highest occurrence counts, with occurrence counts and in
-descending order. Options are provided for filtering out input lines and
-performing sed(1)-style editing of the selected fields as they're being read.
+.TH topfew
 .PP
-If you do not specify any files on the command-line, \fBtf\fR, processes
-the standard input.
-input file will be read from standard input. 
-.SH OPTIONS
-.TP
-\*(T<\fB\-n integer\fR, \fB--number integer\fR\*(T>
-How many of the highest-occurrence-count lines to print out. The default
-value is 10.
-.TP
-\*(T<\fB\-f fieldlist\fR, \fB--fields fieldlist\fR\*(T>
-Specifies which fields should be extracted from incoming records and used in
-computing occurrence counts. The fieldlist must be a comma-separated list of
-integers identifying field numbers, which start at one, for example \fB3\fR and
-\fB2,5,6\fR.  The fields must be provided in order, so \fB3,1,7\fR is an error.
+A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
+.SH Usage
+.PP
+.RS
+.nf
+tf 
+    \-n, \-\-number (output line count) [default is 10]
+    \-f, \-\-fields (field list) [default is the whole record]
+    \-g, \-\-grep (regexp) [may repeat, default is accept all]
+    \-v, \-\-vgrep (regexp) [may repeat, default is reject none]
+    \-s, \-\-sed (regexp) (replacement) [may repeat, default is no changes]
+    \-w, \-\-width (segment count) [default is result of runtime.numCPU()]
+    \-\-sample
+    \-h, \-help, \-\-help
+    filename [default is stdin]
 
-If no fieldlist is provided, \fBtf\fR treats the whole input record as a single
-field.
-.TP
-\*(T<\fB\-g regexp\fR, \fB--grep regexp\fR\*(T>
-Applies the provided
-regular expression to each record as it is read and if the regexp does not
-match the record, causes \fBtf\fR to bypass the record.
-
-Can be provided multiple times; the provided regular expressions
-will be applied in the order they appear on the command line.
-.TP
-\*(T<\fB\-v regexp\fR, \fB--vgrep regexp\fR\*(T>
-The inverse of \fB-g\fR/\fB--grep\fR, rejecting records that match the provided
-regular expression.  As with \fB-g\fR, can be provided multiple times.
-.TP
-\*(T<\fB\-s regexp replacement\fR, \fB--sed regexp replacement\fR\*(T>
-As its name suggests, applies sed-style editing by replacing any text
-that matches the provided regexp with the provided replacement.  It works
-on the fields in the fieldlist after they have been extracted from the record.
-
-If ()-enclosed capturing groups appear in the regexp, they may be referred to
-as \fB$1\fR, \fB$2\fR, and so on in the replacement.
-
-This option can be provided many times, and the replacement operations are
-performed in the order they appear on the command line.
-.TP
-\*(T<\fB\--sample\fR\*(T>
-It can be tricky to get the regular expressions in the
-\*(T<\fB\-g\fR\*(T>,
-\*(T<\fB\-v\fR\*(T>, and
-\*(T<\fB\-s\fR\*(T> options right. Specifying
-\*(T<\fB\--sample\fR\*(T> causes \fBtf\fR to print lines to the standard output
-that display the filtering and field-editing logic.  It can only be used when
-processing standard input, not a file.
-.TP
-\*(T<\fB\-w integer\fR, \fB--width integer\fR\*(T>
-Causes \fBtf\fR to divide the named file into the specified numer of segments
-and process them in parallel.  The default is the result of the Go
-\fBruntime.numCPU()\fR library call, which often works well.
-.TP
-\*(T<\fB-h\fR, \fB\-help\fR\*(T> and \*(T<\fB\--help\fR\*(T>
-Describe the function and options of \fBtf\fR.
-.SH EXIT STATUS
-\fBtf\fR exits with status 1 for any fatal error, such as malformed
-options or an inability to open the input.
-.SH ALTERNATIVES
-The function provided by \fBtf\fR can be replicated by a shell command
-line containing instances of grep(1) and sed(1), and usually ending
-with the sequence:
-
- ... | sort | uniq -c | sort -nr | head
-
-However, in most cases \fBtf\fR is much faster.
-.SH AUTHOR
-Initially written by Tim Bray, with optimizations stolen from
-Dirkjan Ochtman.
+All the arguments are optional; if none are provided, tf will read records 
+from the standard input and list the 10 which occur most often.
+.fi
+.RE
+.SH Options
+.PP
+\fB\fC\-n integer\fR, \fB\fC\-\-number integer\fR How many of the highest‐occurrence‐count lines to print out. 
+The default value is 10.
+.PP
+\fB\fC\-f fieldlist, \-\-fields fieldlist\fR Specifies which fields should be extracted from incoming records and used in computing occurrence counts.
+The fieldlist must be a comma‐separated  list  of  integers  identifying  field numbers, which start at one, for example 3 and 2,5,6.
+The fields must be provided in order, so 3,1,7 is an error.
+.PP
+If no fieldlist is provided, \fBtf\fP treats the whole input record as a single field.
+.PP
+\fB\fC\-g regexp\fR, \fB\fC\-\-grep regexp\fR
+.PP
+The  initial \fBg\fP suggests \fB\fCgrep\fR\&.
+This option applies the provided regular expression to each record as it is read and if the regexp does not match the record, \fBtf\fP bypasses it.
+.PP
+This option can be provided multiple times; the provided regular expressions will be applied in the order they appear on the command line.
+.PP
+\fB\fC\-v regexp\fR, \fB\fC\-\-vgrep regegxp\fR
+.PP
+The initial \fBv\fP suggests \fB\fCgrep ‐v\fR\&. This operation is the  inverse  of \fB\fC\-g\fR and \fB\fC\-‐grep\fR, rejecting records that match the  provided regular  expression.
+.br
+As  with \fB\fCgrep\fR, it can be provided multiple times.
+.PP
+\fB\fC\-s regexp replacement\fR, \fB\fC\-\-sed regexp replacement\fR
+.PP
+As its name suggests, applies sed‐style editing by replacing any text that matches the provided regexp with the provided replacement.
+It  works on the fields in the fieldlist after they have been extracted from the record.
+.PP
+If ()‐enclosed capturing groups appear in the regexp,  they  may be referred to as \fB$1\fP, \fB$2\fP, and so on in, the replacement.
+.PP
+This  option can be provided many times, and the replacement operations are performed in the order they appear on  the  command line.
+.PP
+\fB\fC\-\-sample\fR
+.PP
+It can be tricky to get the regular expressions in the \fB\fC−g\fR, \fB\fC−v\fR, and \fB\fC−s\fR options  right.
+Specifying \fB\fC\-−sample\fR  causes  \fBtf\fP  to  print lines to the standard output that display the filtering and field‐editing logic.
+It can  only  be used when processing standard input, not a file.
+.PP
+\fB\fC\-w integer\fR, \fB\fC\-\-width integer\fR
+.PP
+If a file name is specified then \fBtf\fP, rather than reading it from end to end, will divide it into segments and process it in multiple parallel threads.
+The optimal number of threads depends in a complicated way on how many cores your CPU has what kind of cores they are, and the storage architecture.
+.PP
+The default is the result of the Go \fB\fCruntime.NumCPU()\fR calls and often produces good results.
+.PP
+\fB\fC\-h\fR, \fB\fC\-help\fR, \fB\fC\-\-help\fR
+.PP
+Describes the function and options of \fBtf\fP\&.
+.SH Examples
+.PP
+To find the IP address that most commonly hits your web site, given an Apache logfile named \fB\fCaccess_log\fR\&.
+.PP
+\fB\fCtf \-\-fields 1 access_log\fR
+.PP
+The same effect could be achieved with
+.PP
+\fB\fCawk '{print $1}' access_log | sort | uniq \-c | sort \-rn | head\fR
+.PP
+But \fBtf\fP is usually much faster.
+.PP
+Do the same, but exclude high\-traffic bots (omitting the filename).
+.PP
+\fB\fCtf \-fields 1 \-vgrep googlebot \-vgrep bingbot\fR 
+.PP
+Most popular IP addresses from May 2020.
+.PP
+\fB\fCtf \-fields 1 \-grep '\\[../May/2020'\fR
+.PP
+Most popular hour/minute of the day for retrievals.
+.PP
+\fB\fCtf \-fields 4 \-sed "\\\\[" ""  \-sed '^[^:]*:' ''  \-sed ':..$' ''\fR
+.SH Credits
+.PP
+Tim Bray created version 0.1 of Topfew, and the path toward 1.0 was based chiefly on ideas stolen from Dirkjan Ochtman and contributed by Simon Fell.

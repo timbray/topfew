@@ -3,17 +3,17 @@ package topfew
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 )
 
 // Sample prints out what amounts to a debugging feed, showing how the filtering and keyrewriting are working.
 func Sample(ioReader io.Reader, filters *Filters, kf *KeyFinder) error {
-
 	reader := bufio.NewReader(ioReader)
-	for true {
+	for {
 		record, err := reader.ReadBytes('\n')
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err
@@ -23,6 +23,7 @@ func Sample(ioReader io.Reader, filters *Filters, kf *KeyFinder) error {
 			fmt.Print("   ACCEPT: " + string(record))
 		} else {
 			fmt.Print("   REJECT: " + string(record))
+			continue
 		}
 		keyBytes, err := kf.GetKey(record)
 		if err != nil {
@@ -30,9 +31,7 @@ func Sample(ioReader io.Reader, filters *Filters, kf *KeyFinder) error {
 		}
 
 		filtered := filters.FilterField(keyBytes)
-		if filtered == nil {
-			fmt.Printf("  REJECT: %s\n", string(filtered))
-		} else if bytes.Equal(keyBytes, filtered) {
+		if bytes.Equal(keyBytes, filtered) {
 			fmt.Printf("KEY AS IS: %s\n", string(filtered))
 		} else {
 			fmt.Printf("   KEY IN: %s\n", string(keyBytes))

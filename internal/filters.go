@@ -46,7 +46,7 @@ func (f *Filters) AddVgrep(s string) error {
 	return err
 }
 
-// FilterRecord returns true if the supplied record passes all the filter
+// FilterRecord returns true if the supplied record passes all the Filter
 // criteria.
 func (f *Filters) FilterRecord(bytes []byte) bool {
 	if f.Greps == nil && f.VGreps == nil {

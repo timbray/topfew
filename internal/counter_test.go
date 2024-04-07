@@ -15,7 +15,7 @@ func Test1KLines(t *testing.T) {
 	//noinspection ALL
 	defer file.Close()
 	table := NewCounter(5)
-	re := regexp.MustCompile("\\s+")
+	re := regexp.MustCompile(`\s+`)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -120,6 +120,7 @@ func pv(v uint64) *uint64 {
 }
 
 func assertKeyCountsEqual(t *testing.T, exp []*KeyCount, act []*KeyCount) {
+	t.Helper()
 	if len(exp) != len(act) {
 		t.Errorf("Expecting %d results, but got %d", len(exp), len(act))
 	}

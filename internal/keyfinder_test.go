@@ -39,7 +39,6 @@ func TestKeyFinder(t *testing.T) {
 				t.Errorf("got '%s' wanted '%s'", string(k), singles[i])
 			}
 		}
-
 	}
 
 	kf = NewKeyFinder([]uint{1, 3})
