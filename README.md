@@ -1,6 +1,30 @@
 # topfew
 A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
 
+## Examples
+
+To find the IP address that most commonly hits your web site, given an Apache logfile named `access_log`.
+
+`tf --fields 1 access_log`
+
+The same effect could be achieved with
+
+`awk '{print $1}' access_log | sort | uniq -c | sort -rn | head`
+
+But **tf** is usually much faster.
+
+Do the same, but exclude high-traffic bots (omitting the filename).
+
+`tf --fields 1 --vgrep googlebot --vgrep bingbot`
+
+Most popular IP addresses from May 2020.
+
+`tf --fields 1 -grep '\[../May/2020'`
+
+Most popular hour/minute of the day for retrievals.
+
+`tf --fields 4 --sed "\\[" ""  --sed '^[^:]*:' ''  --sed ':..$' ''`
+
 ## Usage
 
 ```shell
@@ -66,29 +90,22 @@ The default is the result of the Go `runtime.NumCPU()` calls and often produces 
 
 Describes the function and options of **tf**.
 
-## Examples
+## Performance issues
 
-To find the IP address that most commonly hits your web site, given an Apache logfile named `access_log`.
+Since the effect of topfew can be exactly duplicated with a combination of `awk`, `grep`, `sed` and `sort`, you wouldn’t be using it if you didn’t care about performance. 
+Topfew is quite highly tuned and pushes your computer’s I/O subsystem and Go runtime hard.
+Therefore, the observed effects of combinations of options can vary dramatically from system to system.
 
-`tf --fields 1 access_log`
+For example, if I want to list the top records containing the string `example` from a file named `big-file` I could do either of the following:
 
-The same effect could be achieved with
+```shell
+tf -g example big-file 
+grep example big-file | tf
+```
 
-`awk '{print $1}' access_log | sort | uniq -c | sort -rn | head`
+When I benchmark topfew on a modern Apple-Silicon Mac and an elderly spinning-rust Linux VPS, I observe that the first option is faster on Mac, the second on Linux.
 
-But **tf** is usually much faster.
-
-Do the same, but exclude high-traffic bots (omitting the filename).
-
-`tf -fields 1 -vgrep googlebot -vgrep bingbot` 
-
-Most popular IP addresses from May 2020.
-
-`tf -fields 1 -grep '\[../May/2020'`
-
-Most popular hour/minute of the day for retrievals.
-
-`tf -fields 4 -sed "\\[" ""  -sed '^[^:]*:' ''  -sed ':..$' ''`
+Only one performance issue is uncomplicated: Topfew will **always** run faster on a named file than a standard-input stream.
 
 ## Credits
 
