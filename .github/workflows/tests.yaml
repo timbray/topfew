@@ -57,6 +57,9 @@ jobs:
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Upload Codecov Report
         uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: timbray/topfew
 
       - name: Verify git clean
         shell: bash
