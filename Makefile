@@ -3,7 +3,7 @@
 all:	test build 
 
 test:	*/*.go
-	go test -v ./... && go vet ./...
+	go test ./... && go vet ./...
 
 build:	bin/macos-arm/tf bin/macos-x86/tf bin/linux-x86/tf bin/linux-arm/tf
 
