@@ -1,7 +1,7 @@
 # topfew
 
 [![Tests](https://github.com/timbray/topfew/actions/workflows/tests.yaml/badge.svg)](https://github.com/timbray/topfew/actions/workflows/tests.yaml)
-
+[![codecov](https://codecov.io/gh/timbray/topfew/branch/main/graph/badge.svg)](https://codecov.io/gh/timbray/topfew)
 
 A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
 
