@@ -1,6 +1,6 @@
 # topfew
 
-[![Tests](https://github.com/timbray/quamina/actions/workflows/tests.yaml/badge.svg)](https://github.com/timbray/quamina/actions/workflows/go-unit-tests.yaml)
+[![Tests](https://github.com/timbray/topfew/actions/workflows/tests.yaml/badge.svg)](https://github.com/timbray/topfew/actions/workflows/tests.yaml)
 
 
 A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
