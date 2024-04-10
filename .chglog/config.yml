@@ -1,0 +1,31 @@
+style: github
+template: CHANGELOG.tpl.md
+info:
+  title: CHANGELOG
+  repository_url: https://github.com/timbray/topfew
+options:
+  commits:
+    filters:
+      Type:
+        - chore
+        - fix
+        - kaizen
+        - docs
+  commit_groups:
+    title_maps:
+      chore: 🧹 Chore
+      fix: 🐞 Fix
+      kaizen: 👩‍🎨 Improve
+      docs: 📚 Documentation
+  header:
+    pattern: "^(\\w*)\\:\\s(.*)$"
+    pattern_maps:
+      - Type
+      - Subject
+  refs:
+    actions:
+      - Closes
+      - Fixes
+  notes:
+    keywords:
+      - "BREAKING"
