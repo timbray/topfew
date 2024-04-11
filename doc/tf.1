@@ -1,6 +1,29 @@
 .TH topfew
 .PP
 A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
+.SH Examples
+.PP
+To find the IP address that most commonly hits your web site, given an Apache logfile named \fB\fCaccess_log\fR\&.
+.PP
+\fB\fCtf \-\-fields 1 access_log\fR
+.PP
+The same effect could be achieved with
+.PP
+\fB\fCawk '{print $1}' access_log | sort | uniq \-c | sort \-rn | head\fR
+.PP
+But \fBtf\fP is usually much faster.
+.PP
+Do the same, but exclude high\-traffic bots (omitting the filename).
+.PP
+\fB\fCtf \-\-fields 1 \-\-vgrep googlebot \-\-vgrep bingbot\fR
+.PP
+Most popular IP addresses from May 2020.
+.PP
+\fB\fCtf \-\-fields 1 \-grep '\\[../May/2020'\fR
+.PP
+Most popular hour/minute of the day for retrievals.
+.PP
+\fB\fCtf \-\-fields 4 \-\-sed "\\\\[" ""  \-\-sed '^[^:]*:' ''  \-\-sed ':..$' ''\fR
 .SH Usage
 .PP
 .RS
@@ -69,29 +92,24 @@ The default is the result of the Go \fB\fCruntime.NumCPU()\fR calls and often pr
 \fB\fC\-h\fR, \fB\fC\-help\fR, \fB\fC\-\-help\fR
 .PP
 Describes the function and options of \fBtf\fP\&.
-.SH Examples
+.SH Performance issues
 .PP
-To find the IP address that most commonly hits your web site, given an Apache logfile named \fB\fCaccess_log\fR\&.
+Since the effect of topfew can be exactly duplicated with a combination of \fB\fCawk\fR, \fB\fCgrep\fR, \fB\fCsed\fR and \fB\fCsort\fR, you wouldn’t be using it if you didn’t care about performance. 
+Topfew is quite highly tuned and pushes your computer’s I/O subsystem and Go runtime hard.
+Therefore, the observed effects of combinations of options can vary dramatically from system to system.
 .PP
-\fB\fCtf \-\-fields 1 access_log\fR
+For example, if I want to list the top records containing the string \fB\fCexample\fR from a file named \fB\fCbig\-file\fR I could do either of the following:
 .PP
-The same effect could be achieved with
+.RS
+.nf
+tf \-g example big\-file 
+grep example big\-file | tf
+.fi
+.RE
 .PP
-\fB\fCawk '{print $1}' access_log | sort | uniq \-c | sort \-rn | head\fR
+When I benchmark topfew on a modern Apple\-Silicon Mac and an elderly spinning\-rust Linux VPS, I observe that the first option is faster on Mac, the second on Linux.
 .PP
-But \fBtf\fP is usually much faster.
-.PP
-Do the same, but exclude high\-traffic bots (omitting the filename).
-.PP
-\fB\fCtf \-fields 1 \-vgrep googlebot \-vgrep bingbot\fR 
-.PP
-Most popular IP addresses from May 2020.
-.PP
-\fB\fCtf \-fields 1 \-grep '\\[../May/2020'\fR
-.PP
-Most popular hour/minute of the day for retrievals.
-.PP
-\fB\fCtf \-fields 4 \-sed "\\\\[" ""  \-sed '^[^:]*:' ''  \-sed ':..$' ''\fR
+Only one performance issue is uncomplicated: Topfew will \fBalways\fP run faster on a named file than a standard\-input stream.
 .SH Credits
 .PP
 Tim Bray created version 0.1 of Topfew, and the path toward 1.0 was based chiefly on ideas stolen from Dirkjan Ochtman and contributed by Simon Fell.
