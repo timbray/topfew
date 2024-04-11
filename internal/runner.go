@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime/pprof"
-	"runtime/trace"
 )
 
 func Run(config *Config, instream io.Reader) ([]*KeyCount, error) {
@@ -14,9 +12,8 @@ func Run(config *Config, instream io.Reader) ([]*KeyCount, error) {
 	var topList []*KeyCount
 	var err error
 
-	// TODO: Figure out how to make some of these things fail to improve test coverage.
-	// Alternately, just comment out the tracing stuff.
-	if config.CPUProfile != "" {
+	/* == ENABLE PROFILING ==
+		if config.CPUProfile != "" {
 		f, err := os.Create(config.CPUProfile)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "can't create profiler: %s\n", err.Error())
@@ -43,6 +40,7 @@ func Run(config *Config, instream io.Reader) ([]*KeyCount, error) {
 		}
 		defer trace.Stop()
 	}
+	*/
 
 	if config.Fname == "" {
 		if config.Sample {

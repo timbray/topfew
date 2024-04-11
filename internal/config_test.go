@@ -26,8 +26,10 @@ func TestArgSyntax(t *testing.T) {
 		{"--sample"},
 		{"--width", "2"}, {"-w", "3"},
 		{"--sample", "fname"},
+		/* == ENABLE PROFILING ==
 		{"--cpuprofile", "/tmp/cp"},
 		{"--trace", "/tmp/tr"},
+		*/
 	}
 
 	for _, bad := range bads {

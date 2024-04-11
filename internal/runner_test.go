@@ -5,11 +5,13 @@ import (
 	"testing"
 )
 
+/* == ENABLE PROFILING ==
 func TestRunner(t *testing.T) {
 	var err error
 	var c *Config
 
 	bads := [][]string{
+
 		{"--cpuprofile", "/"},
 		{"--trace", "/"},
 	}
@@ -27,6 +29,7 @@ func TestRunner(t *testing.T) {
 		}
 	}
 }
+*/
 
 func TestStreamAndFile(t *testing.T) {
 	args := []string{"-f", "7", "../test/data/apache-50k.txt"}

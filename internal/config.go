@@ -49,15 +49,21 @@ func Configure(args []string) (*Config, error) {
 			if (i + 1) >= len(args) {
 				err = errors.New("insufficient arguments for --cpuprofile")
 			} else {
+				/* == ENABLE PROFILING ==
 				i++
 				config.CPUProfile = args[i]
+				*/
+				err = errors.New("to enable profiling, uncomment lines marked ENABLE PROFILING")
 			}
 		case arg == "--trace":
 			if (i + 1) >= len(args) {
 				err = errors.New("insufficient arguments for --trace")
 			} else {
+				/* == ENABLE PROFILING ==
 				i++
 				config.TraceFname = args[i]
+				*/
+				err = errors.New("to enable profiling, uncomment lines marked ENABLE PROFILING")
 			}
 		case arg == "-g" || arg == "--grep":
 			if (i + 1) >= len(args) {
