@@ -14,6 +14,9 @@ func TestArgSyntax(t *testing.T) {
 		{"--sample", "--trace"}, {"--trace"},
 		{"--sed"}, {"-s", "x"}, {"--sample", "--sed", "1"},
 		{"--width", "a"}, {"-w", "0"}, {"--sample", "-w"},
+		// COMMENT OUT FOLLOWING TO ENABLE TRACING
+		{"--cpuprofile", "/tmp/cp"},
+		{"--trace", "/tmp/tr"},
 	}
 
 	// not testing -h/--help because it'd be extra work to avoid printing out the usage

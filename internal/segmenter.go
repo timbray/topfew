@@ -98,7 +98,7 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 		end += int64(len(tillNL))
 	}
 
-	// now seek back to the beginning of the file to get ready for reading
+	// now seek back to the beginning of the segment to get ready for reading
 	offset, err = file.Seek(start, 0)
 	if err != nil {
 		return nil, err
