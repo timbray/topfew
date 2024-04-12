@@ -12,36 +12,6 @@ func Run(config *Config, instream io.Reader) ([]*KeyCount, error) {
 	var topList []*KeyCount
 	var err error
 
-	/* == ENABLE PROFILING ==
-		if config.CPUProfile != "" {
-		f, err := os.Create(config.CPUProfile)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "can't create profiler: %s\n", err.Error())
-			return nil, err
-		}
-		err = pprof.StartCPUProfile(f)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "can't start profiler: %s\n", err.Error())
-			return nil, err
-		}
-		defer pprof.StopCPUProfile()
-	}
-	if config.TraceFname != "" {
-		f, err := os.Create(config.TraceFname)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "can't create trace output file: %s\n", err.Error())
-			return nil, err
-		}
-		// The generated trace can be analyzed with: go tool trace <tracefile>
-		err = trace.Start(f)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "can't start tracing: %s\n", err.Error())
-			return nil, err
-		}
-		defer trace.Stop()
-	}
-	*/
-
 	if config.Fname == "" {
 		if config.Sample {
 			for i, sed := range config.Filter.Seds {

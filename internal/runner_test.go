@@ -5,32 +5,6 @@ import (
 	"testing"
 )
 
-/* == ENABLE PROFILING ==
-func TestRunner(t *testing.T) {
-	var err error
-	var c *Config
-
-	bads := [][]string{
-
-		{"--cpuprofile", "/"},
-		{"--trace", "/"},
-	}
-
-	for _, bad := range bads {
-		osBad := []string{"OS"}
-		osBad = append(osBad, bad...)
-		c, err = Configure(osBad)
-		if err != nil {
-			t.Error("Configure!")
-		}
-		_, err = Run(c, nil)
-		if err == nil {
-			t.Error("Accepted bogus config")
-		}
-	}
-}
-*/
-
 func TestStreamAndFile(t *testing.T) {
 	args := []string{"-f", "7", "../test/data/apache-50k.txt"}
 
