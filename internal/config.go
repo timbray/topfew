@@ -8,18 +8,18 @@ import (
 	"strings"
 )
 
-type Config struct {
-	Size   int
-	Fields []uint
+type config struct {
+	size   int
+	fields []uint
 	Fname  string
-	Filter Filters
-	Width  int
-	Sample bool
+	filter filters
+	width  int
+	sample bool
 }
 
-func Configure(args []string) (*Config, error) {
+func Configure(args []string) (*config, error) {
 	// lifted out of main.go to facilitate testing
-	config := Config{Size: 10}
+	config := config{size: 10}
 	var err error
 
 	i := 0
@@ -31,9 +31,9 @@ func Configure(args []string) (*Config, error) {
 				err = errors.New("insufficient arguments for --number")
 			} else {
 				i++
-				config.Size, err = strconv.Atoi(args[i])
-				if err == nil && config.Size < 1 {
-					err = fmt.Errorf("invalid Size %d", config.Size)
+				config.size, err = strconv.Atoi(args[i])
+				if err == nil && config.size < 1 {
+					err = fmt.Errorf("invalid size %d", config.size)
 				}
 			}
 		case arg == "-f" || arg == "--fields":
@@ -41,31 +41,31 @@ func Configure(args []string) (*Config, error) {
 				err = errors.New("insufficient arguments for --fields")
 			} else {
 				i++
-				config.Fields, err = parseFields(args[i])
+				config.fields, err = parseFields(args[i])
 			}
 		case arg == "-g" || arg == "--grep":
 			if (i + 1) >= len(args) {
 				err = errors.New("insufficient arguments for --grep")
 			} else {
 				i++
-				err = config.Filter.AddGrep(args[i])
+				err = config.filter.addGrep(args[i])
 			}
 		case arg == "-v" || arg == "--vgrep":
 			if (i + 1) >= len(args) {
 				err = errors.New("insufficient arguments for --vgrep")
 			} else {
 				i++
-				err = config.Filter.AddVgrep(args[i])
+				err = config.filter.addVgrep(args[i])
 			}
 		case arg == "-s" || arg == "--sed":
 			if (i + 2) >= len(args) {
 				err = errors.New("insufficient arguments for --sed")
 			} else {
-				err = config.Filter.AddSed(args[i+1], args[i+2])
+				err = config.filter.addSed(args[i+1], args[i+2])
 				i += 2
 			}
 		case arg == "--sample":
-			config.Sample = true
+			config.sample = true
 		case arg == "-h" || arg == "-help" || arg == "--help":
 			fmt.Println(instructions)
 			os.Exit(0)
@@ -74,9 +74,9 @@ func Configure(args []string) (*Config, error) {
 				err = errors.New("insufficient arguments for --width")
 			} else {
 				i++
-				config.Width, err = strconv.Atoi(args[i])
-				if err == nil && config.Width < 1 {
-					err = fmt.Errorf("invalid Width %d", config.Width)
+				config.width, err = strconv.Atoi(args[i])
+				if err == nil && config.width < 1 {
+					err = fmt.Errorf("invalid width %d", config.width)
 				}
 			}
 
@@ -134,15 +134,15 @@ Usage: tf
 All the arguments are optional; if none are provided, tf will read records 
 from the standard input and list the 10 which occur most often.
 
-Field list is comma-separated integers, e.g. -f 3 or --fields 1,3,7. The Fields
+Field list is comma-separated integers, e.g. -f 3 or --fields 1,3,7. The fields
 must be provided in order, so 3,1,7 is an error.
 
-The regexp-valued Fields work as follows:
+The regexp-valued fields work as follows:
 -g/--grep discards records that don't match the regexp (g for grep)
 -v/--vgrep discards records that do match the regexp (v for grep -v)
--s/--sed works on extracted Fields, replacing regexp with replacement
+-s/--sed works on extracted fields, replacing regexp with replacement
 
-The regexp-valued Fields can be supplied multiple times; the filtering
+The regexp-valued fields can be supplied multiple times; the filtering
 and substitution will be performed in the order supplied.
 
 If the input is a named file, tf will process it in multiple parallel

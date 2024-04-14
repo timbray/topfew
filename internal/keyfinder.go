@@ -1,7 +1,7 @@
 package topfew
 
-// Extract a key from a record based on a list of keys. If the list is empty, the key is the whole record.
-//  Otherwise, there's a list of Fields. They are extracted, joined with spaces, and that's the key
+// Extract a Key from a record based on a list of keys. If the list is empty, the Key is the whole record.
+//  Otherwise, there's a list of fields. They are extracted, joined with spaces, and that's the Key
 
 // First implementation was regexp based but Golang regexps are slow.  So we'll use a hand-built state machine that
 //  only cares whether each byte encodes space-or-tab or not.
@@ -10,20 +10,20 @@ import (
 	"errors"
 )
 
-// NER is the error message returned when the input has fewer Fields than the KeyFinder is configured for.
+// NER is the error message returned when the input has fewer fields than the keyFinder is configured for.
 const NER = "not enough bytes in record"
 
-// KeyFinder extracts a key based on the specified Fields from a record. Fields is a slice of small integers
+// keyFinder extracts a Key based on the specified fields from a record. fields is a slice of small integers
 // representing field numbers; 1-based on the command line, 0-based here.
-type KeyFinder struct {
+type keyFinder struct {
 	fields []uint
 	key    []byte
 }
 
-// NewKeyFinder creates a new key finder with the supplied field numbers, the input should be 1 based.
-// KeyFinder is not thread-safe, you should Clone it for each goroutine that uses it.
-func NewKeyFinder(keys []uint) *KeyFinder {
-	kf := KeyFinder{
+// newKeyFinder creates a new Key finder with the supplied field numbers, the input should be 1 based.
+// keyFinder is not thread-safe, you should clone it for each goroutine that uses it.
+func newKeyFinder(keys []uint) *keyFinder {
+	kf := keyFinder{
 		key: make([]byte, 0, 128),
 	}
 	for _, knum := range keys {
@@ -32,19 +32,19 @@ func NewKeyFinder(keys []uint) *KeyFinder {
 	return &kf
 }
 
-// Clone returns a new KeyFinder with the same configuration. Each goroutine should use its own
-// KeyFinder instance.
-func (kf *KeyFinder) Clone() *KeyFinder {
-	return &KeyFinder{
+// clone returns a new keyFinder with the same configuration. Each goroutine should use its own
+// keyFinder instance.
+func (kf *keyFinder) clone() *keyFinder {
+	return &keyFinder{
 		fields: kf.fields,
 		key:    make([]byte, 0, 128),
 	}
 }
 
-// GetKey extracts a key from the supplied record. This is applied to every record,
+// getKey extracts a key from the supplied record. This is applied to every record,
 // so efficiency matters.
-func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
-	// if there are no key-finders just return the record, minus any trailing newlines
+func (kf *keyFinder) getKey(record []byte) ([]byte, error) {
+	// if there are no Key-finders just return the record, minus any trailing newlines
 	if len(kf.fields) == 0 {
 		if record[len(record)-1] == '\n' {
 			record = record[0 : len(record)-1]
@@ -58,9 +58,9 @@ func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
 	index := 0
 	first := true
 
-	// for each field in the key
+	// for each field in the Key
 	for _, keyField := range kf.fields {
-		// bypass Fields before the one we want
+		// bypass fields before the one we want
 		for field < int(keyField) {
 			index, err = pass(record, index)
 			if err != nil {
@@ -76,7 +76,7 @@ func (kf *KeyFinder) GetKey(record []byte) ([]byte, error) {
 			kf.key = append(kf.key, ' ')
 		}
 
-		// attach desired field to key
+		// attach desired field to Key
 		kf.key, index, err = gather(kf.key, record, index)
 		if err != nil {
 			return nil, err
@@ -97,7 +97,7 @@ func gather(key []byte, record []byte, index int) ([]byte, int, error) {
 		return nil, 0, errors.New(NER)
 	}
 
-	// copy key bytes
+	// copy Key bytes
 	for index < len(record) && record[index] != ' ' && record[index] != '\t' && record[index] != '\n' {
 		key = append(key, record[index])
 		index++

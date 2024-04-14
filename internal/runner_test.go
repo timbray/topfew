@@ -65,7 +65,7 @@ func TestBadFile(t *testing.T) {
 	args := []string{"/nosuch"}
 	c, err := Configure(args)
 	if err != nil {
-		t.Error("Config!")
+		t.Error("config!")
 	}
 	_, err = Run(c, nil)
 	if err == nil {

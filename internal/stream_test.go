@@ -11,10 +11,10 @@ func TestBadStreamReader(t *testing.T) {
 	args := []string{}
 	c, err := Configure(args)
 	if err != nil {
-		t.Error("Config!")
+		t.Error("config!")
 	}
 	cer := newCER("testing stream")
-	_, err = FromStream(cer, &c.Filter, nil, c.Size)
+	_, err = fromStream(cer, &c.filter, nil, c.size)
 	if err == nil {
 		t.Error("survived err from Read")
 	}
@@ -27,7 +27,7 @@ func TestStreamProcessing(t *testing.T) {
 	args := []string{"-f", "3", "--vgrep", "FOO"}
 	c, err := Configure(args)
 	if err != nil {
-		t.Error("Config: " + err.Error())
+		t.Error("config: " + err.Error())
 	}
 	input := "FOO\nBAR\n"
 	stringreader := bufio.NewReader(strings.NewReader(input))
@@ -48,9 +48,9 @@ func Test1KLinesStream(t *testing.T) {
 	//noinspection ALL
 	defer file.Close()
 
-	kf := NewKeyFinder([]uint{1})
-	f := Filters{nil, nil, nil}
-	x, err := FromStream(file, &f, kf, 5)
+	kf := newKeyFinder([]uint{1})
+	f := filters{nil, nil, nil}
+	x, err := fromStream(file, &f, kf, 5)
 	if err != nil {
 		t.Error("OUCH: " + err.Error())
 	}
@@ -68,7 +68,7 @@ func Test1KLinesStream(t *testing.T) {
 
 	for _, kc := range x {
 		if *kc.Count != uint64(wanted[kc.Key]) {
-			t.Error("Wrong count for key: " + kc.Key)
+			t.Error("Wrong count for Key: " + kc.Key)
 		}
 	}
 }

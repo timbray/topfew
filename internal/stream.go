@@ -8,9 +8,9 @@ import (
 	"os"
 )
 
-// FromStream reads a stream and hands each line to the top-occurrence counter. Currently only used on stdin.
-func FromStream(ioReader io.Reader, filters *Filters, kf *KeyFinder, size int) ([]*KeyCount, error) {
-	counter := NewCounter(size)
+// fromStream reads a stream and hands each line to the top-occurrence counter. Currently only used on stdin.
+func fromStream(ioReader io.Reader, filters *filters, kf *keyFinder, size int) ([]*keyCount, error) {
+	counter := newCounter(size)
 	reader := bufio.NewReader(ioReader)
 	for {
 		record, err := reader.ReadBytes('\n')
@@ -20,18 +20,18 @@ func FromStream(ioReader io.Reader, filters *Filters, kf *KeyFinder, size int) (
 			return nil, err
 		}
 
-		if !filters.FilterRecord(record) {
+		if !filters.filterRecord(record) {
 			continue
 		}
-		keyBytes, err := kf.GetKey(record)
+		keyBytes, err := kf.getKey(record)
 		if err != nil {
 			// bypass
-			_, _ = fmt.Fprintf(os.Stderr, "Can't extract key from %s\n", string(record))
+			_, _ = fmt.Fprintf(os.Stderr, "Can't extract Key from %s\n", string(record))
 			continue
 		}
-		keyBytes = filters.FilterField(keyBytes)
+		keyBytes = filters.filterField(keyBytes)
 
-		counter.Add(keyBytes)
+		counter.add(keyBytes)
 	}
-	return counter.GetTop(), nil
+	return counter.getTop(), nil
 }

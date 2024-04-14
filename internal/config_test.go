@@ -38,7 +38,7 @@ func TestArgSyntax(t *testing.T) {
 
 	for _, good := range goods {
 		var err error
-		var c *Config
+		var c *config
 		c, err = Configure(good)
 		if err != nil || c == nil {
 			t.Error("rejected good argument: " + good[0])

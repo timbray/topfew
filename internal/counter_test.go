@@ -14,19 +14,19 @@ func Test1KLines(t *testing.T) {
 	}
 	//noinspection ALL
 	defer file.Close()
-	table := NewCounter(5)
+	table := newCounter(5)
 	re := regexp.MustCompile(`\s+`)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		fields := re.Split(scanner.Text(), 2)
-		table.Add([]byte(fields[0]))
+		table.add([]byte(fields[0]))
 	}
 
 	if err := scanner.Err(); err != nil {
 		t.Error(err.Error())
 	}
-	x := table.GetTop()
+	x := table.getTop()
 
 	var wanted = map[string]int{
 		"96.48.229.116":   74,
@@ -42,13 +42,13 @@ func Test1KLines(t *testing.T) {
 
 	for _, kc := range x {
 		if *kc.Count != uint64(wanted[kc.Key]) {
-			t.Error("Wrong count for key: " + kc.Key)
+			t.Error("Wrong count for Key: " + kc.Key)
 		}
 	}
 }
 
 func TestTable_Add(t *testing.T) {
-	table := NewCounter(5)
+	table := newCounter(5)
 	keys := []string{
 		"a", "b", "c", "d", "e", "f", "g", "h",
 		"a", "b", "c", "d", "e", "f", "g",
@@ -59,7 +59,7 @@ func TestTable_Add(t *testing.T) {
 		"c", "g",
 		"c"}
 	for _, key := range keys {
-		table.Add([]byte(key))
+		table.add([]byte(key))
 	}
 	n4 := uint64(4)
 	n5 := uint64(5)
@@ -67,66 +67,66 @@ func TestTable_Add(t *testing.T) {
 	n7 := uint64(7)
 	n8 := uint64(8)
 
-	wanted := []*KeyCount{
+	wanted := []*keyCount{
 		{"c", &n8},
 		{"g", &n7},
 		{"e", &n6},
 		{"f", &n5},
 		{"a", &n4},
 	}
-	assertKeyCountsEqual(t, wanted, table.GetTop())
+	assertKeyCountsEqual(t, wanted, table.getTop())
 
-	table = NewCounter(3)
+	table = newCounter(3)
 	for _, key := range keys {
-		table.Add([]byte(key))
+		table.add([]byte(key))
 	}
-	wanted = []*KeyCount{
+	wanted = []*keyCount{
 		{"c", &n8},
 		{"g", &n7},
 		{"e", &n6},
 	}
-	assertKeyCountsEqual(t, wanted, table.GetTop())
+	assertKeyCountsEqual(t, wanted, table.getTop())
 }
 
 func Test_newTable(t *testing.T) {
-	table := NewCounter(333)
-	top := table.GetTop()
+	table := newCounter(333)
+	top := table.getTop()
 	if len(top) != 0 {
 		t.Error("new table should be empty")
 	}
 }
 
 func Test_Merge(t *testing.T) {
-	a := NewCounter(10)
+	a := newCounter(10)
 	b := newSegmentCounter()
 	c := newSegmentCounter()
 	for i := 0; i < 50; i++ {
-		b.Add([]byte{byte('A')})
-		b.Add([]byte{byte('B')})
-		c.Add([]byte{byte('C')})
-		c.Add([]byte{byte('A')})
+		b.add([]byte{byte('A')})
+		b.add([]byte{byte('B')})
+		c.add([]byte{byte('C')})
+		c.add([]byte{byte('A')})
 	}
-	c.Add([]byte{byte('C')})
+	c.add([]byte{byte('C')})
 	a.merge(b)
 	a.merge(c)
-	exp := []*KeyCount{
+	exp := []*keyCount{
 		{"A", pv(100)}, {"C", pv(51)}, {"B", pv(50)},
 	}
-	assertKeyCountsEqual(t, exp, a.GetTop())
+	assertKeyCountsEqual(t, exp, a.getTop())
 }
 
 func pv(v uint64) *uint64 {
 	return &v
 }
 
-func assertKeyCountsEqual(t *testing.T, exp []*KeyCount, act []*KeyCount) {
+func assertKeyCountsEqual(t *testing.T, exp []*keyCount, act []*keyCount) {
 	t.Helper()
 	if len(exp) != len(act) {
 		t.Errorf("Expecting %d results, but got %d", len(exp), len(act))
 	}
 	for i := 0; i < min(len(exp), len(act)); i++ {
 		if exp[i].Key != act[i].Key {
-			t.Errorf("Unexpected key %v at index %d, expecting %v", act[i].Key, i, exp[i].Key)
+			t.Errorf("Unexpected Key %v at index %d, expecting %v", act[i].Key, i, exp[i].Key)
 		}
 		if *exp[i].Count != *act[i].Count {
 			t.Errorf("Unexpected count of %d at index %d, expecting %d", *act[i].Count, i, *exp[i].Count)
