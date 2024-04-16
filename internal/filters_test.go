@@ -15,18 +15,18 @@ func TestSeds(t *testing.T) {
 		/*6*/ "172.124.211.165 - - [04/May/2020:06:47:40 -0700] \"GET /ongoing/serif.css HTTP/1.1\" 200 2177 \"https://www.tbray.org/ongoing/When/202x/2020/04/29/Leaving-Amazon\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:74.0) Gecko/20100101 Firefox/74.0\"\n",
 	}
 
-	var filter Filters
-	err := filter.AddSed("^.*\\[04/May/2020:", "")
+	var filter filters
+	err := filter.addSed("^.*\\[04/May/2020:", "")
 	if err != nil {
 		t.Error("remove prefix" + err.Error())
 	}
-	err = filter.AddSed(" .*\n", "")
+	err = filter.addSed(" .*\n", "")
 	if err != nil {
 		t.Error("isolate time " + err.Error())
 	}
 	wanted := []string{"06:36:20", "06:47:04", "06:47:09", "06:47:12", "06:47:14", "06:47:32", "06:47:40"}
 	for i, line := range lines {
-		got := string(filter.FilterField([]byte(line)))
+		got := string(filter.filterField([]byte(line)))
 		if got != wanted[i] {
 			t.Errorf("Wanted [%s], got [%s]", wanted[i], got)
 		}
@@ -45,7 +45,7 @@ func TestFilterCombos(t *testing.T) {
 	}
 
 	/*
-		Fields := []string{
+		fields := []string{
 			"foo",         // 0
 			"bar",         // 1
 			"donkey",      // 2
@@ -59,14 +59,14 @@ func TestFilterCombos(t *testing.T) {
 	wantCSS := "\"GET \\S+\\.css "
 	var err error
 
-	var recordFilter Filters
-	err = recordFilter.AddGrep(wantCSS)
+	var recordFilter filters
+	err = recordFilter.addGrep(wantCSS)
 	if err != nil {
-		t.Error("AddGrep " + err.Error())
+		t.Error("addGrep " + err.Error())
 	}
 
 	for i, line := range lines {
-		matched := recordFilter.FilterRecord([]byte(line))
+		matched := recordFilter.filterRecord([]byte(line))
 		if matched {
 			if i != 6 {
 				t.Error("Matched " + lines[i])
@@ -78,13 +78,13 @@ func TestFilterCombos(t *testing.T) {
 		}
 	}
 
-	recordFilter = Filters{nil, nil, nil}
-	err = recordFilter.AddVgrep(wantCSS)
+	recordFilter = filters{nil, nil, nil}
+	err = recordFilter.addVgrep(wantCSS)
 	if err != nil {
-		t.Error("AddVgrep" + err.Error())
+		t.Error("addVgrep" + err.Error())
 	}
 	for i, line := range lines {
-		matched := recordFilter.FilterRecord([]byte(line))
+		matched := recordFilter.filterRecord([]byte(line))
 		if !matched {
 			if i != 6 {
 				t.Error("Didn't match " + lines[i])
@@ -96,17 +96,17 @@ func TestFilterCombos(t *testing.T) {
 		}
 	}
 
-	recordFilter = Filters{nil, nil, nil}
-	err = recordFilter.AddGrep("\"GET \\S*-Amazon ")
+	recordFilter = filters{nil, nil, nil}
+	err = recordFilter.addGrep("\"GET \\S*-Amazon ")
 	if err != nil {
-		t.Error("AddGrep " + err.Error())
+		t.Error("addGrep " + err.Error())
 	}
-	err = recordFilter.AddVgrep("Leaving-")
+	err = recordFilter.addVgrep("Leaving-")
 	if err != nil {
-		t.Error("AddVgrep " + err.Error())
+		t.Error("addVgrep " + err.Error())
 	}
 	for i, line := range lines {
-		matched := recordFilter.FilterRecord([]byte(line))
+		matched := recordFilter.filterRecord([]byte(line))
 		if matched {
 			if i != 4 {
 				t.Error("Matched " + lines[i])
@@ -118,18 +118,18 @@ func TestFilterCombos(t *testing.T) {
 		}
 	}
 
-	recordFilter = Filters{nil, nil, nil}
-	err = recordFilter.AddGrep("\"GET \\S+-Amazon ")
+	recordFilter = filters{nil, nil, nil}
+	err = recordFilter.addGrep("\"GET \\S+-Amazon ")
 	if err != nil {
-		t.Error("AddGrep " + err.Error())
+		t.Error("addGrep " + err.Error())
 	}
-	err = recordFilter.AddGrep("^54.38.222.160 ")
+	err = recordFilter.addGrep("^54.38.222.160 ")
 	if err != nil {
-		t.Error("AddGrep " + err.Error())
+		t.Error("addGrep " + err.Error())
 	}
 	matched := 0
 	for _, line := range lines {
-		if recordFilter.FilterRecord([]byte(line)) {
+		if recordFilter.filterRecord([]byte(line)) {
 			matched++
 		}
 	}

@@ -8,8 +8,8 @@ import (
 	"io"
 )
 
-// Sample prints out what amounts to a debugging feed, showing how the filtering and keyrewriting are working.
-func Sample(ioReader io.Reader, filters *Filters, kf *KeyFinder) error {
+// sample prints out what amounts to a debugging feed, showing how the filtering and keyrewriting are working.
+func sample(ioReader io.Reader, filters *filters, kf *keyFinder) error {
 	reader := bufio.NewReader(ioReader)
 	for {
 		record, err := reader.ReadBytes('\n')
@@ -19,18 +19,18 @@ func Sample(ioReader io.Reader, filters *Filters, kf *KeyFinder) error {
 			return err
 		}
 
-		if filters.FilterRecord(record) {
+		if filters.filterRecord(record) {
 			fmt.Print("   ACCEPT: " + string(record))
 		} else {
 			fmt.Print("   REJECT: " + string(record))
 			continue
 		}
-		keyBytes, err := kf.GetKey(record)
+		keyBytes, err := kf.getKey(record)
 		if err != nil {
 			return err
 		}
 
-		filtered := filters.FilterField(keyBytes)
+		filtered := filters.filterField(keyBytes)
 		if bytes.Equal(keyBytes, filtered) {
 			fmt.Printf("KEY AS IS: %s\n", string(filtered))
 		} else {

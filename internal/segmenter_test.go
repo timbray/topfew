@@ -20,20 +20,20 @@ func TestReadAll(t *testing.T) {
 	if offs != 4176 || err != nil {
 		t.Error("OUCH")
 	}
-	s := Segment{4176, 4951, file}
-	kf := NewKeyFinder([]uint{7})
+	s := segment{4176, 4951, file}
+	kf := newKeyFinder([]uint{7})
 	ch := make(chan segmentResult)
-	f := Filters{nil, nil, nil}
+	f := filters{nil, nil, nil}
 	go readSegment(&s, &f, kf, ch)
 
 	segres := <-ch
 	if segres.err != nil {
 		t.Fatalf("got error from segment reader %v", segres.err)
 	}
-	counter := NewCounter(10)
-	counter.merge(segres.counters)
+	counter := newCounter(10)
+	counter.merge(segres.segCounter)
 
-	res := counter.GetTop()
+	res := counter.getTop()
 	var want = map[string]bool{
 		"/ongoing/picInfo.xml?o=https://old.tbray.org/ongoing/": true,
 		"/ongoing/in-feed.xml":                         true,
@@ -65,7 +65,7 @@ func TestReadSegmentFiltering(t *testing.T) {
 	args := []string{"-f", "2", "-g", "foo"}
 	c, err := Configure(args)
 	if err != nil {
-		t.Error("Config!")
+		t.Error("config!")
 	}
 
 	tmpName := fmt.Sprintf("/tmp/tf-%d", os.Getpid())
@@ -76,8 +76,8 @@ func TestReadSegmentFiltering(t *testing.T) {
 	defer func() { _ = os.Remove(tmpName) }()
 	_, _ = fmt.Fprint(tmpfile, input)
 	_ = tmpfile.Close()
-	counter := NewCounter(10)
-	err = ReadFileInSegments(tmpName, &c.Filter, counter, NewKeyFinder(c.Fields), 1)
+	counter := newCounter(10)
+	err = readFileInSegments(tmpName, &c.filter, counter, newKeyFinder(c.fields), 1)
 	if err != nil {
 		t.Error("Run? " + err.Error())
 	}
@@ -109,15 +109,15 @@ func TestVeryLongLines(t *testing.T) {
 		_, _ = fmt.Fprintln(tmpfile, c3)
 	}
 	_ = tmpfile.Close()
-	counter := NewCounter(10)
-	err = ReadFileInSegments(tmpName, &Filters{}, counter, NewKeyFinder(nil), 1)
+	counter := newCounter(10)
+	err = readFileInSegments(tmpName, &filters{}, counter, newKeyFinder(nil), 1)
 	if err != nil {
 		t.Fatal("Failed to read long-lines file")
 	}
 	assertKeyCountsEqual(t,
-		[]*KeyCount{
+		[]*keyCount{
 			{a80k, pv(5)},
 			{c3, pv(3)},
 			{b30k, pv(2)}},
-		counter.GetTop())
+		counter.getTop())
 }

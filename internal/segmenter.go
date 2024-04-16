@@ -9,18 +9,18 @@ import (
 	"runtime"
 )
 
-// Segment represents a segment of a file. Is required to begin at the start of a line, i.e. start of file or
+// segment represents a segment of a file. Is required to begin at the start of a line, i.e. start of file or
 // after a \n.
-type Segment struct {
+type segment struct {
 	start int64
 	end   int64
 	file  *os.File
 }
 
-// ReadFileInSegments breaks the file up into multiple segments and then reads them in parallel. counter
+// readFileInSegments breaks the file up into multiple segments and then reads them in parallel. counter
 // will be updated with the resulting occurrence counts.
-func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *KeyFinder, width int) error {
-	// find file Size
+func readFileInSegments(fname string, filter *filters, counter *counter, kf *keyFinder, width int) error {
+	// find file size
 	file, err := os.Open(fname)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *Key
 	}
 
 	// compute segments and put them in a slice
-	var segments []*Segment
+	var segments []*segment
 	base := int64(0)
 	for base < fileSize {
 		// each segment starts at the beginning of a line and ends after a newline (or at EOF)
@@ -62,13 +62,13 @@ func ReadFileInSegments(fname string, filter *Filters, counter *Counter, kf *Key
 		if res.err != nil {
 			return err
 		}
-		counter.merge(res.counters)
+		counter.merge(res.segCounter)
 	}
 	return nil
 }
 
 // the start value is guaranteed to be at file start or after newline
-func newSegment(fname string, start int64, end int64) (*Segment, error) {
+func newSegment(fname string, start int64, end int64) (*segment, error) {
 	// All these "err != nil" tests on basic filesystem seek operations are probably superfluous and
 	// drive down the test coverage
 
@@ -106,29 +106,29 @@ func newSegment(fname string, start int64, end int64) (*Segment, error) {
 	if offset != start {
 		return nil, fmt.Errorf("tried to seek to %d, went to %d", start, offset)
 	}
-	return &Segment{start, end, file}, nil
+	return &segment{start, end, file}, nil
 }
 
 type segmentResult struct {
 	// one of these will be set
-	err      error
-	counters segmentCounter
+	err        error
+	segCounter segmentCounter
 }
 
 // we've already opened the file and seeked to the right place
-func readSegment(s *Segment, filter *Filters, kf *KeyFinder, reportCh chan segmentResult) {
+func readSegment(s *segment, filter *filters, kf *keyFinder, reportCh chan segmentResult) {
 	// noinspection ALL
 	defer s.file.Close()
 
 	reader := bufio.NewReaderSize(s.file, 16*1024)
 	current := s.start
-	counters := newSegmentCounter()
-	kf = kf.Clone()
+	segCounter := newSegmentCounter()
+	kf = kf.clone()
 	for current < s.end {
 		// ReadSlice results are only valid until the next call to Read, so we need
 		// to be careful about how long we hang onto the record slice. The SegmentCounter
 		// is the only thing that holds onto data from record, and it has to make a copy
-		// anyway when it constructs its string key. So this is safe.
+		// anyway when it constructs its string Key. So this is safe.
 		record, err := reader.ReadSlice('\n')
 		// ReadSlice returns an error if a line doesn't fit in its buffer. We
 		// deal with that by switching to ReadBytes to get the remainder of the line.
@@ -145,16 +145,16 @@ func readSegment(s *Segment, filter *Filters, kf *KeyFinder, reportCh chan segme
 			return
 		}
 		current += int64(len(record))
-		if !filter.FilterRecord(record) {
+		if !filter.filterRecord(record) {
 			continue
 		}
-		keyBytes, err := kf.GetKey(record)
+		keyBytes, err := kf.getKey(record)
 		if err != nil {
 			// bypass
-			_, _ = fmt.Fprintf(os.Stderr, "Can't extract key from %s\n", string(record))
+			_, _ = fmt.Fprintf(os.Stderr, "Can't extract Key from %s\n", string(record))
 			continue
 		}
-		counters.Add(filter.FilterField(keyBytes))
+		segCounter.add(filter.filterField(keyBytes))
 	}
-	reportCh <- segmentResult{counters: counters}
+	reportCh <- segmentResult{segCounter: segCounter}
 }

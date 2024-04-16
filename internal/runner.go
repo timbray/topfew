@@ -6,33 +6,33 @@ import (
 	"os"
 )
 
-func Run(config *Config, instream io.Reader) ([]*KeyCount, error) {
+func Run(config *config, instream io.Reader) ([]*keyCount, error) {
 	// lifted out of main.go to facilitate testing
-	var kf = NewKeyFinder(config.Fields)
-	var topList []*KeyCount
+	var kf = newKeyFinder(config.fields)
+	var topList []*keyCount
 	var err error
 
 	if config.Fname == "" {
-		if config.Sample {
-			for i, sed := range config.Filter.Seds {
+		if config.sample {
+			for i, sed := range config.filter.seds {
 				fmt.Printf("SED %d: s/%s/%s/\n", i, sed.ReplaceThis, sed.WithThat)
 			}
-			err = Sample(instream, &config.Filter, kf)
+			err = sample(instream, &config.filter, kf)
 		} else {
-			topList, err = FromStream(instream, &config.Filter, kf, config.Size)
+			topList, err = fromStream(instream, &config.filter, kf, config.size)
 		}
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "Error reading stream: %s\n", err.Error())
 			return nil, err
 		}
 	} else {
-		counter := NewCounter(config.Size)
-		err = ReadFileInSegments(config.Fname, &config.Filter, counter, kf, config.Width)
+		counter := newCounter(config.size)
+		err = readFileInSegments(config.Fname, &config.filter, counter, kf, config.width)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "Error processing %s: %s\n", config.Fname, err.Error())
 			return nil, err
 		}
-		topList = counter.GetTop()
+		topList = counter.getTop()
 	}
 
 	return topList, err
