@@ -97,6 +97,10 @@ The default is the result of the Go `runtime.NumCPU()` calls and often produces 
 
 Describes the function and options of **tf**.
 
+## Records and fields
+
+Records are separated by newlines, fields within records by white space, defined as one or more space or tab characters.
+
 ## Performance issues
 
 Since the effect of topfew can be exactly duplicated with a combination of `awk`, `grep`, `sed` and `sort`, you wouldn’t be using it if you didn’t care about performance. 
