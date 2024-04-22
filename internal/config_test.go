@@ -14,6 +14,7 @@ func TestArgSyntax(t *testing.T) {
 		{"--sample", "--trace"}, {"--trace"},
 		{"--sed"}, {"-s", "x"}, {"--sample", "--sed", "1"},
 		{"--width", "a"}, {"-w", "0"}, {"--sample", "-w"},
+		{"--sample", "-p"}, {"--fieldseparator", "a["},
 	}
 
 	// not testing -h/--help because it'd be extra work to avoid printing out the usage
@@ -26,6 +27,7 @@ func TestArgSyntax(t *testing.T) {
 		{"--sample"},
 		{"--width", "2"}, {"-w", "3"},
 		{"--sample", "fname"},
+		{"-p", "a[bc]*d$"},
 	}
 
 	for _, bad := range bads {

@@ -5,6 +5,36 @@ import (
 	"testing"
 )
 
+func TestFieldSeparator(t *testing.T) {
+	args := []string{"-p", "tt*", "-f", "2,4"}
+
+	c, err := Configure(args)
+	if err != nil {
+		t.Error("Config!")
+	}
+
+	records := []string{
+		"atbttctttttdtttte",
+	}
+	wanted := []string{
+		"b d",
+	}
+	kf := newKeyFinder(c.fields, c.fieldSeparator)
+	for i, record := range records {
+		got, err := kf.getKey([]byte(record))
+		if err != nil {
+			t.Error("getKey: " + err.Error())
+		}
+		if string(got) != wanted[i] {
+			t.Errorf("wanted %s got %s", wanted[i], string(got))
+		}
+	}
+	_, err = kf.getKey([]byte("atbtc"))
+	if err == nil || err.Error() != NER {
+		t.Error("bad error value")
+	}
+}
+
 func TestKeyFinder(t *testing.T) {
 	var records = []string{
 		"a x c",
@@ -13,8 +43,8 @@ func TestKeyFinder(t *testing.T) {
 	}
 	var kf, kf2 *keyFinder
 
-	kf = newKeyFinder(nil)
-	kf2 = newKeyFinder([]uint{})
+	kf = newKeyFinder(nil, nil)
+	kf2 = newKeyFinder([]uint{}, nil)
 
 	for _, recordString := range records {
 		record := []byte(recordString)
@@ -29,7 +59,7 @@ func TestKeyFinder(t *testing.T) {
 	}
 
 	singles := []string{"x", "b", "b"}
-	kf = newKeyFinder([]uint{2})
+	kf = newKeyFinder([]uint{2}, nil)
 	for i, record := range records {
 		k, err := kf.getKey([]byte(record))
 		if err != nil {
@@ -41,7 +71,7 @@ func TestKeyFinder(t *testing.T) {
 		}
 	}
 
-	kf = newKeyFinder([]uint{1, 3})
+	kf = newKeyFinder([]uint{1, 3}, nil)
 	for _, recordstring := range records {
 		record := []byte(recordstring)
 		r, err := kf.getKey(record)
@@ -50,7 +80,7 @@ func TestKeyFinder(t *testing.T) {
 		}
 	}
 
-	kf = newKeyFinder([]uint{1, 4})
+	kf = newKeyFinder([]uint{1, 4}, nil)
 	tooShorts := []string{"a", "a b", "a b c"}
 	for _, tooShortString := range tooShorts {
 		tooShort := []byte(tooShortString)
