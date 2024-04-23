@@ -2,6 +2,7 @@ package topfew
 
 import (
 	"bytes"
+	"os"
 	"testing"
 )
 
@@ -32,6 +33,36 @@ func TestFieldSeparator(t *testing.T) {
 	_, err = kf.getKey([]byte("atbtc"))
 	if err == nil || err.Error() != NER {
 		t.Error("bad error value")
+	}
+}
+
+func TestCSVSeparator(t *testing.T) {
+	args := []string{"-p", ",", "-f", "11"}
+	c, err := Configure(args)
+	if err != nil {
+		t.Error("Config!")
+	}
+	input, err := os.Open("../test/data/csoc.csv")
+	if err != nil {
+		t.Error("Open: " + err.Error())
+	}
+	counts, err := Run(c, input)
+	if err != nil {
+		t.Error("Run: " + err.Error())
+	}
+	if len(counts) != 5 {
+		t.Errorf("Got %d results, wanted 5", len(counts))
+	}
+	wantCounts := []uint64{4, 2, 1, 1, 1}
+	wantKeys := []string{"50", "-1.97", "amount", "-1.75", "-1.9"}
+	for i, count := range counts {
+		if *count.Count != wantCounts[i] {
+			t.Errorf("Counts[%d] is %d wanted %d", i, *count.Count, wantCounts[i])
+		}
+		// because for equal values, the sort isn't stable - Counts[2,3,4] are all 1
+		if i < 2 && count.Key != wantKeys[i] {
+			t.Errorf("Keys[%d] is %s wanted %s", i, count.Key, wantKeys[i])
+		}
 	}
 }
 

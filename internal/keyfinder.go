@@ -89,6 +89,7 @@ func (kf *keyFinder) getKey(record []byte) ([]byte, error) {
 			field++
 		}
 	} else {
+		kf.key = kf.key[:0]
 		allFields := kf.separator.Split(string(record), -1)
 		for i, field := range kf.fields {
 			if int(field) >= len(allFields) {
