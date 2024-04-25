@@ -4,17 +4,19 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
 type config struct {
-	size   int
-	fields []uint
-	Fname  string
-	filter filters
-	width  int
-	sample bool
+	size           int
+	fields         []uint
+	fieldSeparator *regexp.Regexp
+	Fname          string
+	filter         filters
+	width          int
+	sample         bool
 }
 
 func Configure(args []string) (*config, error) {
@@ -42,6 +44,13 @@ func Configure(args []string) (*config, error) {
 			} else {
 				i++
 				config.fields, err = parseFields(args[i])
+			}
+		case arg == "-p" || arg == "--fieldseparator":
+			if (i + 1) >= len(args) {
+				err = errors.New("insufficient arguments for --fieldseparator")
+			} else {
+				i++
+				config.fieldSeparator, err = regexp.Compile(args[i])
 			}
 		case arg == "-g" || arg == "--grep":
 			if (i + 1) >= len(args) {
@@ -123,6 +132,7 @@ order of occurrences.
 Usage: tf
 	-n, --number (output line count) [default is 10]
 	-f, --fields (field list) [default is the whole record]
+	-p, --fieldseparator (field separator regex) [default is white space]
 	-g, --grep (regexp) [may repeat, default is accept all]
 	-v, --vgrep (regexp) [may repeat, default is reject none]
 	-s, --sed (regexp) (replacement) [may repeat, default is no changes]
@@ -136,6 +146,10 @@ from the standard input and list the 10 which occur most often.
 
 Field list is comma-separated integers, e.g. -f 3 or --fields 1,3,7. The fields
 must be provided in order, so 3,1,7 is an error.
+
+Fields are separated by white space (spaces or tabs) by default.
+This can be overridden with the --fieldseparator option, at some cost in
+performance.
 
 The regexp-valued fields work as follows:
 -g/--grep discards records that don't match the regexp (g for grep)

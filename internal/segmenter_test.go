@@ -21,7 +21,7 @@ func TestReadAll(t *testing.T) {
 		t.Error("OUCH")
 	}
 	s := segment{4176, 4951, file}
-	kf := newKeyFinder([]uint{7})
+	kf := newKeyFinder([]uint{7}, nil)
 	ch := make(chan segmentResult)
 	f := filters{nil, nil, nil}
 	go readSegment(&s, &f, kf, ch)
@@ -77,7 +77,7 @@ func TestReadSegmentFiltering(t *testing.T) {
 	_, _ = fmt.Fprint(tmpfile, input)
 	_ = tmpfile.Close()
 	counter := newCounter(10)
-	err = readFileInSegments(tmpName, &c.filter, counter, newKeyFinder(c.fields), 1)
+	err = readFileInSegments(tmpName, &c.filter, counter, newKeyFinder(c.fields, nil), 1)
 	if err != nil {
 		t.Error("Run? " + err.Error())
 	}
@@ -110,7 +110,7 @@ func TestVeryLongLines(t *testing.T) {
 	}
 	_ = tmpfile.Close()
 	counter := newCounter(10)
-	err = readFileInSegments(tmpName, &filters{}, counter, newKeyFinder(nil), 1)
+	err = readFileInSegments(tmpName, &filters{}, counter, newKeyFinder(nil, nil), 1)
 	if err != nil {
 		t.Fatal("Failed to read long-lines file")
 	}

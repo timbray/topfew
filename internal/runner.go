@@ -8,7 +8,7 @@ import (
 
 func Run(config *config, instream io.Reader) ([]*keyCount, error) {
 	// lifted out of main.go to facilitate testing
-	var kf = newKeyFinder(config.fields)
+	var kf = newKeyFinder(config.fields, config.fieldSeparator)
 	var topList []*keyCount
 	var err error
 

@@ -2,8 +2,69 @@ package topfew
 
 import (
 	"bytes"
+	"os"
 	"testing"
 )
+
+func TestFieldSeparator(t *testing.T) {
+	args := []string{"-p", "tt*", "-f", "2,4"}
+
+	c, err := Configure(args)
+	if err != nil {
+		t.Error("Config!")
+	}
+
+	records := []string{
+		"atbttctttttdtttte",
+	}
+	wanted := []string{
+		"b d",
+	}
+	kf := newKeyFinder(c.fields, c.fieldSeparator)
+	for i, record := range records {
+		got, err := kf.getKey([]byte(record))
+		if err != nil {
+			t.Error("getKey: " + err.Error())
+		}
+		if string(got) != wanted[i] {
+			t.Errorf("wanted %s got %s", wanted[i], string(got))
+		}
+	}
+	_, err = kf.getKey([]byte("atbtc"))
+	if err == nil || err.Error() != NER {
+		t.Error("bad error value")
+	}
+}
+
+func TestCSVSeparator(t *testing.T) {
+	args := []string{"-p", ",", "-f", "11"}
+	c, err := Configure(args)
+	if err != nil {
+		t.Error("Config!")
+	}
+	input, err := os.Open("../test/data/csoc.csv")
+	if err != nil {
+		t.Error("Open: " + err.Error())
+	}
+	counts, err := Run(c, input)
+	if err != nil {
+		t.Error("Run: " + err.Error())
+	}
+	if len(counts) != 5 {
+		t.Errorf("Got %d results, wanted 5", len(counts))
+	}
+	wantCounts := []uint64{4, 2, 1, 1, 1}
+	wantKeys := []string{"50", "-1.97", "amount", "-1.75", "-1.9"}
+	for i, count := range counts {
+		if *count.Count != wantCounts[i] {
+			t.Errorf("Counts[%d] is %d wanted %d", i, *count.Count, wantCounts[i])
+		}
+		// because for equal values, the sort isn't stable - Counts[2,3,4] are all 1
+		if i < 2 && count.Key != wantKeys[i] {
+			t.Errorf("Keys[%d] is %s wanted %s", i, count.Key, wantKeys[i])
+		}
+	}
+}
 
 func TestKeyFinder(t *testing.T) {
 	var records = []string{
@@ -13,8 +74,8 @@ func TestKeyFinder(t *testing.T) {
 	}
 	var kf, kf2 *keyFinder
 
-	kf = newKeyFinder(nil)
-	kf2 = newKeyFinder([]uint{})
+	kf = newKeyFinder(nil, nil)
+	kf2 = newKeyFinder([]uint{}, nil)
 
 	for _, recordString := range records {
 		record := []byte(recordString)
@@ -29,7 +90,7 @@ func TestKeyFinder(t *testing.T) {
 	}
 
 	singles := []string{"x", "b", "b"}
-	kf = newKeyFinder([]uint{2})
+	kf = newKeyFinder([]uint{2}, nil)
 	for i, record := range records {
 		k, err := kf.getKey([]byte(record))
 		if err != nil {
@@ -41,7 +102,7 @@ func TestKeyFinder(t *testing.T) {
 		}
 	}
 
-	kf = newKeyFinder([]uint{1, 3})
+	kf = newKeyFinder([]uint{1, 3}, nil)
 	for _, recordstring := range records {
 		record := []byte(recordstring)
 		r, err := kf.getKey(record)
@@ -50,7 +111,7 @@ func TestKeyFinder(t *testing.T) {
 		}
 	}
 
-	kf = newKeyFinder([]uint{1, 4})
+	kf = newKeyFinder([]uint{1, 4}, nil)
 	tooShorts := []string{"a", "a b", "a b c"}
 	for _, tooShortString := range tooShorts {
 		tooShort := []byte(tooShortString)
