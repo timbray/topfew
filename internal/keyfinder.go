@@ -15,7 +15,11 @@ import (
 const NER = "not enough bytes in record"
 
 // keyFinder extracts a Key based on the specified fields from a record. fields is a slice of small integers
-// representing field numbers; 1-based on the command line, 0-based here.
+// representing field numbers; 1-based on the command line, 0-based here. The key field is used to store the
+// key as it is built up fromm the record's fields; it is truncated at the beginning of each call.
+// The idea is to reuse the same storage for each record and minimize allocation and garbage collection. It
+// does mean that the contents of the field are only valid until you call getKey again, and also that
+// the keyFinder type is not thread-safe
 type keyFinder struct {
 	fields    []uint
 	key       []byte
@@ -49,15 +53,15 @@ func (kf *keyFinder) clone() *keyFinder {
 // so efficiency matters.
 func (kf *keyFinder) getKey(record []byte) ([]byte, error) {
 	// if there are no Key-finders just return the record, minus any trailing newlines
-	if len(kf.fields) == 0 && kf.separator == nil {
+	if len(kf.fields) == 0 {
 		if record[len(record)-1] == '\n' {
 			record = record[0 : len(record)-1]
 		}
 		return record, nil
 	}
 	var err error
+	kf.key = kf.key[:0]
 	if kf.separator == nil {
-		kf.key = kf.key[:0]
 		field := 0
 		index := 0
 		first := true
@@ -89,7 +93,6 @@ func (kf *keyFinder) getKey(record []byte) ([]byte, error) {
 			field++
 		}
 	} else {
-		kf.key = kf.key[:0]
 		allFields := kf.separator.Split(string(record), -1)
 		for i, field := range kf.fields {
 			if int(field) >= len(allFields) {
