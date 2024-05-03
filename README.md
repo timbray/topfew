@@ -8,6 +8,8 @@
 
 A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
 
+This is release 1.0 of Topfew.
+
 ## Examples
 
 To find the IP address that most commonly hits your web site, given an Apache logfile named `access_log`.
@@ -132,3 +134,4 @@ Only one performance issue is uncomplicated: Topfew will **always** run faster o
 ## Credits
 
 Tim Bray created version 0.1 of Topfew, and the path toward 1.0 was based chiefly on ideas stolen from Dirkjan Ochtman and contributed by Simon Fell.
+The GitHub CI was based on Michael Gasch’s implementation from my Quamina repository, and he helped with Topfew’s as well.

@@ -1,12 +1,12 @@
-# Contributing to `Topfew`
+# Contributing to Topfew
 
 Topfew is hosted in this GitHub repository 
 at `github.com/timbray/topfew` and welcomes 
 contributions.
 
-As of mid-2024, Topfew is probably more or
-less complete. It is well-tested. Its performance at
-processing streams can keep up with most streams
+This is release 1.0 of Topfew, which is probably more 
+or less complete. It is well-tested. Its performance
+at processing streams can keep up with most streams
 and it is dramatically faster when processing files,
 where it processes multiple segments in parallel.
 
@@ -34,6 +34,26 @@ used in Topfew. See the
 
 Try to limit column width to 120 characters for both code and markdown documents
 such as this one.
+
+### Format of the Commit Message
+
+We follow the conventions described in [How to Write a Git Commit
+Message](http://chris.beams.io/posts/git-commit/).
+
+Be sure to include any related GitHub issue references in the commit message,
+e.g. `Closes: #<number>`.
+
+The [`CHANGELOG.md`](./CHANGELOG.md) and release page uses **commit message
+prefixes** for grouping and highlighting. A commit message that
+starts with `[prefix:] ` will place this commit under the respective
+section in the `CHANGELOG`.
+- `chore:` - Use for repository related activities
+- `fix:` - Use for bug fixes
+- `docs:` - Use for changes to the documentation
+- `kaizen:` - Use for improvements, including optimization and new features
+
+If your contribution falls into multiple categories, e.g. `api` and `pat` it
+is recommended to break up your commits using distinct prefixes.
 
 ### Signing commits
 
