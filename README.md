@@ -70,6 +70,13 @@ If no fieldlist is provided, **tf** treats the whole input record as a single fi
 Provides a regular expression that is used as a field separator instead of the default white space.
 This is likely to incur a significant performance cost.
 
+`-q, --quotedfields`
+
+Some files, for example Apache httpd logs, use space-separation but also
+allow spaces within fields which are delimited by `"`. The -q/--quotedfields
+argument allows **tf** to process these correctly. It is an error to specify both
+-p and -q.
+
 `-g regexp`, `--grep regexp`
 
 The  initial **g** suggests `grep`.
@@ -113,6 +120,36 @@ Describes the function and options of **tf**.
 Records are separated by newlines, fields within records by white space, defined as one or more space or tab characters.
 
 The field separator can be overridden with the --fieldseparator option.
+
+## Case study: Apache access_log
+
+Here is a line from an Apache httpd `access_log` file. For readability, the fields are 
+separated by line-breaks and numbered. Note that the fields are mostly space-separated, but that field 6,
+summarizing the request and its result, is delimited by quote characters `"`.
+
+```
+1. 202.113.19.244 
+2. - 
+3. - 
+4. [12/Mar/2007:08:04:39 
+5. -0800] 
+6. "GET /ongoing/picInfo.xml?o=http://www.tbray.org/ongoing/When/200x/2007/03/10/Beautiful-Code HTTP/1.1" 
+7. 200 
+8. 137 
+9. "http://www.tbray.org/ongoing/When/200x/2007/03/10/Beautiful-Code" 
+10. "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2"
+```
+
+The fetch of `picInfo.xml` signals that this is an actual browser request, likely signifying that 
+a human was involved; the URL following the `o=` is the resource the human looked at. Here is a 
+**tf** invocation that yields a list of the top 5 URLs that were fetched by a human:
+
+```shell
+tf -g picInfo.xml -f 6 -q -s '\?utm.*' '' -s " HTTP/..." "" -s "GET .*\/ongoing" ""
+```
+
+Note the `-g` to select only lines with `picInfo.xml`, the `-q` to request correct processing
+of quote-delimited fields, and the sequence of `-s` patterns to clean up the results.
 
 ## Performance issues
 

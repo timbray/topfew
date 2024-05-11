@@ -15,10 +15,12 @@ func TestArgSyntax(t *testing.T) {
 		{"--sed"}, {"-s", "x"}, {"--sample", "--sed", "1"},
 		{"--width", "a"}, {"-w", "0"}, {"--sample", "-w"},
 		{"--sample", "-p"}, {"--fieldseparator", "a["},
+		{"--fieldseparator", "x", "-q"}, {"--quotedfields", "-f", "z"},
 	}
 
 	// not testing -h/--help because it'd be extra work to avoid printing out the usage
 	goods := [][]string{
+		{"-q", "fname"}, {"--quotedfields"},
 		{"--number", "1"}, {"-n", "5"},
 		{"--fields", "1"}, {"-f", "3,5"},
 		{"--grep", "re1"}, {"-g", "re2"},

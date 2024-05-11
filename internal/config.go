@@ -17,6 +17,7 @@ type config struct {
 	filter         filters
 	width          int
 	sample         bool
+	quotedFields   bool
 }
 
 func Configure(args []string) (*config, error) {
@@ -75,6 +76,8 @@ func Configure(args []string) (*config, error) {
 			}
 		case arg == "--sample":
 			config.sample = true
+		case arg == "--quotedfields" || arg == "-q":
+			config.quotedFields = true
 		case arg == "-h" || arg == "-help" || arg == "--help":
 			fmt.Println(instructions)
 			os.Exit(0)
@@ -100,6 +103,9 @@ func Configure(args []string) (*config, error) {
 			return nil, err
 		}
 		i++
+	}
+	if (config.fieldSeparator != nil) && config.quotedFields {
+		err = errors.New("only one of -p/--fieldseparator and -q/--quotedfields may be specified")
 	}
 
 	return &config, err
@@ -132,7 +138,8 @@ order of occurrences.
 Usage: tf
 	-n, --number (output line count) [default is 10]
 	-f, --fields (field list) [default is the whole record]
-	-p, --fieldseparator (field separator regex) [default is white space]
+    -p, --fieldseparator (field separator regex) [default is white space]
+	-q, --quotedfields [default is false]
 	-g, --grep (regexp) [may repeat, default is accept all]
 	-v, --vgrep (regexp) [may repeat, default is reject none]
 	-s, --sed (regexp) (replacement) [may repeat, default is no changes]
@@ -150,6 +157,11 @@ must be provided in order, so 3,1,7 is an error.
 Fields are separated by white space (spaces or tabs) by default.
 This can be overridden with the --fieldseparator option, at some cost in
 performance.
+
+Some files, for example Apache httpd logs, use space-separation but also
+allow spaces within fields which are quoted with ("). The -q/--quotedfields
+allows tf to process these correctly. It is an error to specify both
+-p and -q.
 
 The regexp-valued fields work as follows:
 -g/--grep discards records that don't match the regexp (g for grep)
