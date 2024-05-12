@@ -48,7 +48,7 @@ func Test1KLinesStream(t *testing.T) {
 	//noinspection ALL
 	defer file.Close()
 
-	kf := newKeyFinder([]uint{1}, nil)
+	kf := newKeyFinder([]uint{1}, nil, false)
 	f := filters{nil, nil, nil}
 	x, err := fromStream(file, &f, kf, 5)
 	if err != nil {

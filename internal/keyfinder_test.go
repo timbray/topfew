@@ -1,8 +1,11 @@
 package topfew
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -20,7 +23,7 @@ func TestFieldSeparator(t *testing.T) {
 	wanted := []string{
 		"b d",
 	}
-	kf := newKeyFinder(c.fields, c.fieldSeparator)
+	kf := newKeyFinder(c.fields, c.fieldSeparator, false)
 	for i, record := range records {
 		got, err := kf.getKey([]byte(record))
 		if err != nil {
@@ -33,6 +36,254 @@ func TestFieldSeparator(t *testing.T) {
 	_, err = kf.getKey([]byte("atbtc"))
 	if err == nil || err.Error() != NER {
 		t.Error("bad error value")
+	}
+}
+
+func TestQuotedFields(t *testing.T) {
+	lines := []string{
+		`i577a483c.versanet.de - - [12/Mar/2007:08:03:37 -0800] "GET /ongoing/ongoing.atom HTTP/1.1" 304 - "-" "NetNewsWire/2.1 (Mac OS X; http://ranchero.com/netnewswire/)"`,
+		`105.66.1.178 - - [19/Apr/2020:06:38:44 -0700] "-" 408 156 "-" "-"`,
+	}
+	kf := newKeyFinder([]uint{6}, nil, true)
+	for i, line := range lines {
+		k, err := kf.getKey([]byte(line))
+		if err != nil {
+			t.Error("getKey: " + err.Error())
+		}
+		if i == 0 && string(k) != "GET /ongoing/ongoing.atom HTTP/1.1" {
+			t.Errorf("at 0 got %s", string(k))
+		}
+		if i == 1 && string(k) != "-" {
+			t.Errorf("at 1 got %s", string(k))
+		}
+	}
+	// test non-quoted fields with -q
+
+	n5 := uint64(5)
+	n3 := uint64(3)
+	wanted := []*keyCount{
+		{"[12/Mar/2007:08:03:42", &n5},
+		{"[12/Mar/2007:08:03:37", &n3},
+	}
+	args := []string{"-q", "-f", "4", "-n", "2", "../test/data/10lines"}
+	c, err := Configure(args)
+	if err != nil {
+		t.Error("Config!")
+	}
+	kc, _ := Run(c, nil)
+	assertKeyCountsEqual(t, wanted, kc)
+
+	f, err := os.Open("../test/data/10lines")
+	if err != nil {
+		t.Error("Open: " + err.Error())
+	}
+	args = []string{"-q", "-f", "7"}
+	c, err = Configure(args)
+	if err != nil {
+		t.Error("Config!")
+	}
+	kc, _ = Run(c, f)
+	fmt.Printf("kc %d\n", len(kc))
+}
+
+func TestSpacedFieldSelection(t *testing.T) {
+	spacedFields := []string{
+		`i577a483c.versanet.de - - [12/Mar/2007:08:03:37 -0800] "GET /ongoing/ongoing.atom HTTP/1.1" 304 - "-" "NetNewsWire/2.1 (Mac OS X; http://ranchero.com/netnewswire/)"`,
+		`ln-bas00.csfb.com - - [12/Mar/2007:08:03:37 -0800] "GET /ongoing/ongoing.atom HTTP/1.0" 304 - "-" "Mozilla/3.01 (compatible;)"`,
+		`host100.newsgator.com - - [12/Mar/2007:08:03:37 -0800] "GET /ongoing/comments.atom HTTP/1.1" 200 134097 "-" "NewsGatorOnline/2.0 (http://www.newsgator.com; 3 subscribers)"`,
+		`pool-141-152-243-156.phil.east.verizon.net - - [12/Mar/2007:08:03:38 -0800] "GET /ongoing/ongoing.atom HTTP/1.1" 304 - "-" "NetNewsWire/2.1.1 (Mac OS X; Lite; http://ranchero.com/netnewswire/)"`,
+		`ertpg6e1.nortelnetworks.com - - [12/Mar/2007:08:03:42 -0800] "GET /ongoing/ongoing.atom HTTP/1.1" 304 - "-" "NetNewsWire/2.1.1 (Mac OS X; Lite; http://ranchero.com/netnewswire/)"`,
+		`82.153.22.192 - - [12/Mar/2007:08:03:42 -0800] "GET /ongoing/ongoing.rss HTTP/1.1" 301 322 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2"`,
+		`css6.csee.usf.edu - - [12/Mar/2007:08:03:42 -0800] "GET /ongoing/When/200x/2007/03/11/Ramirez.png HTTP/1.1" 200 67663 "http://www.tbray.org/ongoing/When/200x/2007/03/11/Misa-Criolla" "endo/1.0 (Mac OS X; ppc i386; http://kula.jp/endo)"`,
+		`82.153.22.192 - - [12/Mar/2007:08:03:42 -0800] "GET /ongoing/ongoing.rss HTTP/1.1" 301 327 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2"`,
+		`82.153.22.192 - - [12/Mar/2007:08:03:42 -0800] "GET /ongoing/ongoing.atom HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2"`,
+		`css6.csee.usf.edu - - [12/Mar/2007:08:03:43 -0800] "GET /ongoing/When/200x/2007/03/11/Misa-Criolla.png HTTP/1.1" 200 79064 "http://www.tbray.org/ongoing/When/200x/2007/03/11/Misa-Criolla" "endo/1.0 (Mac OS X; ppc i386; http://kula.jp/endo)"`,
+	}
+	for recNum, recString := range spacedFields {
+		fields := strings.Split(recString, " ")
+		for fieldNum, field := range fields {
+			kf := newKeyFinder([]uint{uint(fieldNum + 1)}, nil, false)
+			k, err := kf.getKey([]byte(recString))
+			if err != nil {
+				t.Errorf("getKey! rec %d field %d", recNum, fieldNum)
+			}
+			if string(k) != field {
+				t.Errorf("bad match rec %d field %d wanted %s got %s", recNum, fieldNum, field, string(k))
+			}
+		}
+	}
+}
+func TestQuotedFieldSelection(t *testing.T) {
+	quotedFields := [][]string{
+		{"i577a483c.versanet.de", "-", "-", "[12/Mar/2007:08:03:37", "-0800]",
+			"GET /ongoing/ongoing.atom HTTP/1.1", "304", "-", "-",
+			"NetNewsWire/2.1 (Mac OS X; http://ranchero.com/netnewswire/)"},
+		{"ln-bas00.csfb.com", "-", "-", "[12/Mar/2007:08:03:37", "-0800]",
+			"GET /ongoing/ongoing.atom HTTP/1.0", "304", "-", "-",
+			"Mozilla/3.01 (compatible;)"},
+		{"host100.newsgator.com", "-", "-", "[12/Mar/2007:08:03:37", "-0800]",
+			"GET /ongoing/comments.atom HTTP/1.1", "200", "134097", "-",
+			"NewsGatorOnline/2.0 (http://www.newsgator.com; 3 subscribers)"},
+		{"pool-141-152-243-156.phil.east.verizon.net", "-", "-", "[12/Mar/2007:08:03:38", "-0800]",
+			"GET /ongoing/ongoing.atom HTTP/1.1", "304", "-", "-",
+			"NetNewsWire/2.1.1 (Mac OS X; Lite; http://ranchero.com/netnewswire/)"},
+		{"ertpg6e1.nortelnetworks.com", "-", "-", "[12/Mar/2007:08:03:42", "-0800]",
+			"GET /ongoing/ongoing.atom HTTP/1.1", "304", "-", "-",
+			"NetNewsWire/2.1.1 (Mac OS X; Lite; http://ranchero.com/netnewswire/)"},
+		{"82.153.22.192", "-", "-", "[12/Mar/2007:08:03:42", "-0800]",
+			"GET /ongoing/ongoing.rss HTTP/1.1", "301", "322", "-",
+			"Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2"},
+		{"css6.csee.usf.edu", "-", "-", "[12/Mar/2007:08:03:42", "-0800]",
+			"GET /ongoing/When/200x/2007/03/11/Ramirez.png HTTP/1.1", "200", "67663",
+			"http://www.tbray.org/ongoing/When/200x/2007/03/11/Misa-Criolla",
+			"endo/1.0 (Mac OS X; ppc i386; http://kula.jp/endo)"},
+		{"82.153.22.192", "-", "-", "[12/Mar/2007:08:03:42", "-0800]",
+			"GET /ongoing/ongoing.rss HTTP/1.1", "301", "327", "-",
+			"Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2"},
+		{"82.153.22.192", "-", "-", "[12/Mar/2007:08:03:42", "-0800]",
+			"GET /ongoing/ongoing.atom HTTP/1.1", "304", "-", "-",
+			"Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.2) Gecko/20070219 Firefox/2.0.0.2"},
+		{"css6.csee.usf.edu", "-", "-", "[12/Mar/2007:08:03:43", "-0800]",
+			"GET /ongoing/When/200x/2007/03/11/Misa-Criolla.png HTTP/1.1", "200", "79064",
+			"http://www.tbray.org/ongoing/When/200x/2007/03/11/Misa-Criolla",
+			"endo/1.0 (Mac OS X; ppc i386; http://kula.jp/endo)"},
+	}
+
+	var fieldNum uint
+	for fieldNum = 1; fieldNum <= 10; fieldNum++ {
+		kf := newKeyFinder([]uint{fieldNum}, nil, true)
+		kf11 := newKeyFinder([]uint{11}, nil, true)
+		f, err := os.Open("../test/data/10lines")
+		br := bufio.NewReader(f)
+		if err != nil {
+			t.Error("Open: " + err.Error())
+		}
+		for recordNum := 0; recordNum < 10; recordNum++ {
+			record, err := br.ReadBytes('\n')
+			if err != nil {
+				t.Error("readBytes: " + err.Error())
+			}
+			k, err := kf11.getKey(record)
+			if err == nil {
+				t.Errorf("r11 OK! key <%s>\n", string(k))
+			}
+			k, _ = kf.getKey(record)
+			sk := string(k)
+			wanted := quotedFields[recordNum][fieldNum-1]
+			if sk != wanted {
+				t.Errorf("r[%d] f[%d] wanted %s got %s", recordNum, fieldNum, wanted, sk)
+			}
+		}
+		_ = f.Close()
+	}
+}
+
+func TestMultiFields(t *testing.T) {
+	records12 := []string{
+		`a b c d`,
+		`a "b" c d`,
+		`"a" b "c" d`,
+		`"a" "b" "c" d`,
+	}
+	records13 := []string{
+		`a b c d`,
+		`"a" b c d`,
+		`a b "c" d`,
+		`"a" b "c" d`,
+	}
+	records23 := []string{
+		`a b c d`,
+		`a "b" c d`,
+		`a b "c" d`,
+		`a "b" "c" d`,
+	}
+	records24 := []string{
+		`a b c d`,
+		`a "b" c d`,
+		`a b c "d"`,
+		`a "b" "c" "d"`,
+		`a b c d    `,
+		`a b c "d"  `,
+	}
+	records34 := []string{
+		`a b c d`,
+		`a b "c" d`,
+		`a b c "d"`,
+		`a b "c" "d"`,
+		`a b c d    `,
+		`a b c "d"  `,
+	}
+	kf12 := newKeyFinder([]uint{uint(1), uint(2)}, nil, true)
+	kf13 := newKeyFinder([]uint{uint(1), uint(3)}, nil, true)
+	kf23 := newKeyFinder([]uint{uint(2), uint(3)}, nil, true)
+	kf24 := newKeyFinder([]uint{uint(2), uint(4)}, nil, true)
+	kf34 := newKeyFinder([]uint{uint(3), uint(4)}, nil, true)
+
+	for _, record := range records12 {
+		k, err := kf12.getKey([]byte(record))
+		if err != nil {
+			t.Errorf("kf12 err on <%s>: %s", record, err.Error())
+		} else if string(k) != "a b" {
+			t.Errorf("kf12 key on <%s> = <%s>", record, string(k))
+		}
+	}
+	for _, record := range records13 {
+		k, err := kf13.getKey([]byte(record))
+		if err != nil {
+			t.Errorf("kf13 err on <%s>: %s", record, err.Error())
+		} else if string(k) != "a c" {
+			t.Errorf("kf13 key on <%s> = <%s>", record, string(k))
+		}
+	}
+	for _, record := range records23 {
+		k, err := kf23.getKey([]byte(record))
+		if err != nil {
+			t.Errorf("kf23 err on <%s>: %s", record, err.Error())
+		} else if string(k) != "b c" {
+			t.Errorf("kf23 key on <%s> = <%s>", record, string(k))
+		}
+	}
+	for _, record := range records24 {
+		k, err := kf24.getKey([]byte(record))
+		if err != nil {
+			t.Errorf("kf24 err on <%s>: <%s>", record, err.Error())
+		} else if string(k) != "b d" {
+			t.Errorf("kf24 key on <%s> = <%s>", record, string(k))
+		}
+	}
+	for _, record := range records34 {
+		k, err := kf34.getKey([]byte(record))
+		if err != nil {
+			t.Errorf("kf34 err on <%s>: <%s>", record, err.Error())
+		}
+		if string(k) != "c d" {
+			t.Errorf("kf34 key on <%s> = <%s>", record, string(k))
+		}
+	}
+}
+
+func TestPassQuoted(t *testing.T) {
+	record := []byte(`foo bar baz         `)
+	kf := newKeyFinder([]uint{uint(5)}, nil, true)
+	key, err := kf.getKey(record)
+	if err == nil {
+		t.Errorf("accepted, k=<%s>", key)
+	}
+	record = []byte(`foo bar "baz`)
+	kf = newKeyFinder([]uint{uint(4)}, nil, true)
+	key, err = kf.getKey(record)
+	if err == nil {
+		t.Errorf("accepted 2, k=<%s>", key)
+	}
+
+}
+
+func TestGatherQuoted(t *testing.T) {
+	record := []byte(`foo bar "baz`)
+	kf := newKeyFinder([]uint{uint(3)}, nil, true)
+	key, err := kf.getKey(record)
+	if err == nil {
+		t.Errorf("accepted, k=<%s>", key)
 	}
 }
 
@@ -74,8 +325,8 @@ func TestKeyFinder(t *testing.T) {
 	}
 	var kf, kf2 *keyFinder
 
-	kf = newKeyFinder(nil, nil)
-	kf2 = newKeyFinder([]uint{}, nil)
+	kf = newKeyFinder(nil, nil, false)
+	kf2 = newKeyFinder([]uint{}, nil, false)
 
 	for _, recordString := range records {
 		record := []byte(recordString)
@@ -90,7 +341,7 @@ func TestKeyFinder(t *testing.T) {
 	}
 
 	singles := []string{"x", "b", "b"}
-	kf = newKeyFinder([]uint{2}, nil)
+	kf = newKeyFinder([]uint{2}, nil, false)
 	for i, record := range records {
 		k, err := kf.getKey([]byte(record))
 		if err != nil {
@@ -102,7 +353,7 @@ func TestKeyFinder(t *testing.T) {
 		}
 	}
 
-	kf = newKeyFinder([]uint{1, 3}, nil)
+	kf = newKeyFinder([]uint{1, 3}, nil, false)
 	for _, recordstring := range records {
 		record := []byte(recordstring)
 		r, err := kf.getKey(record)
@@ -111,7 +362,7 @@ func TestKeyFinder(t *testing.T) {
 		}
 	}
 
-	kf = newKeyFinder([]uint{1, 4}, nil)
+	kf = newKeyFinder([]uint{1, 4}, nil, false)
 	tooShorts := []string{"a", "a b", "a b c"}
 	for _, tooShortString := range tooShorts {
 		tooShort := []byte(tooShortString)
