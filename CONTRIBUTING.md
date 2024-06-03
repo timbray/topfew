@@ -4,7 +4,7 @@ Topfew is hosted in this GitHub repository
 at `github.com/timbray/topfew` and welcomes 
 contributions.
 
-This is release 1.0 of Topfew, which is probably more 
+This is release 2.0 of Topfew, which is probably more 
 or less complete. It is well-tested. Its performance
 at processing streams can keep up with most streams
 and it is dramatically faster when processing files,

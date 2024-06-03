@@ -8,38 +8,40 @@
 
 A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
 
-This is release 1.0 of Topfew.
+This is release 2.0 of Topfew.
 
 ## Examples
 
 To find the IP address that most commonly hits your web site, given an Apache logfile named `access_log`.
 
-`tf --fields 1 access_log`
+`topfew --fields 1 access_log`
 
 The same effect could be achieved with
 
 `awk '{print $1}' access_log | sort | uniq -c | sort -rn | head`
 
-But **tf** is usually much faster.
+But **topfew** is usually much faster.
 
 Do the same, but exclude high-traffic bots (omitting the filename).
 
-`tf --fields 1 --vgrep googlebot --vgrep bingbot`
+`topfew --fields 1 --vgrep googlebot --vgrep bingbot`
 
 Most popular IP addresses from May 2020.
 
-`tf --fields 1 -grep '\[../May/2020'`
+`topfew --fields 1 -grep '\[../May/2020'`
 
 Most popular hour/minute of the day for retrievals.
 
-`tf --fields 4 --sed "\\[" ""  --sed '^[^:]*:' ''  --sed ':..$' ''`
+`topfew --fields 4 --sed "\\[" ""  --sed '^[^:]*:' ''  --sed ':..$' ''`
 
 ## Usage
 
 ```shell
-tf 
+topfew
 	-n, --number (output line count) [default is 10]
 	-f, --fields (field list) [default is the whole record]
+	-q, --quotedfields [respect "-delimited space-separated fields]
+	-p, --fieldseparator (regexp) [use provided regexp to separate fields]
 	-g, --grep (regexp) [may repeat, default is accept all]
 	-v, --vgrep (regexp) [may repeat, default is reject none]
 	-s, --sed (regexp) (replacement) [may repeat, default is no changes]
@@ -48,7 +50,7 @@ tf
 	-h, -help, --help
 	filename [default is stdin]
 
-All the arguments are optional; if none are provided, tf will read records 
+All the arguments are optional; if none are provided, topfew will read records 
 from the standard input and list the 10 which occur most often.
 ```
 ## Options
@@ -63,7 +65,7 @@ Specifies which fields should be extracted from incoming records and used in com
 The fieldlist must be a comma‐separated  list  of  integers  identifying  field numbers, which start at one, for example 3 and 2,5,6.
 The fields must be provided in order, so 3,1,7 is an error.
 
-If no fieldlist is provided, **tf** treats the whole input record as a single field.
+If no fieldlist is provided, **topfew** treats the whole input record as a single field.
 
 `-p separator, --fieldseparator separator` 
 
@@ -74,13 +76,13 @@ This is likely to incur a significant performance cost.
 
 Some files, for example Apache httpd logs, use space-separation but also
 allow spaces within fields which are delimited by `"`. The -q/--quotedfields
-argument allows **tf** to process these correctly. It is an error to specify both
+argument allows **topfew** to process these correctly. It is an error to specify both
 -p and -q.
 
 `-g regexp`, `--grep regexp`
 
 The  initial **g** suggests `grep`.
-This option applies the provided regular expression to each record as it is read and if the regexp does not match the record, **tf** bypasses it.
+This option applies the provided regular expression to each record as it is read and if the regexp does not match the record, **topfew** bypasses it.
 
 This option can be provided multiple times; the provided regular expressions will be applied in the order they appear on the command line.
 
@@ -101,19 +103,19 @@ This  option can be provided many times, and the replacement operations are perf
 `--sample`
 
 It can be tricky to get the regular expressions in the `−g`, `−v`, and `−s` options  right.
-Specifying `-−sample`  causes  **tf**  to  print lines to the standard output that display the filtering and field‐editing logic.
+Specifying `-−sample`  causes  **topfew**  to  print lines to the standard output that display the filtering and field‐editing logic.
 It can  only  be used when processing standard input, not a file.
 
 `-w integer`, `--width integer`
 
-If a file name is specified then **tf**, rather than reading it from end to end, will divide it into segments and process it in multiple parallel threads.
+If a file name is specified then **topfew**, rather than reading it from end to end, will divide it into segments and process it in multiple parallel threads.
 The optimal number of threads depends in a complicated way on how many cores your CPU has what kind of cores they are, and the storage architecture.
 
 The default is the result of the Go `runtime.NumCPU()` calls and often produces good results.
 
 `-h`, `-help`, `--help`
 
-Describes the function and options of **tf**.
+Describes the function and options of **topfew**.
 
 ## Records and fields
 
@@ -142,10 +144,10 @@ summarizing the request and its result, is delimited by quote characters `"`.
 
 The fetch of `picInfo.xml` signals that this is an actual browser request, likely signifying that 
 a human was involved; the URL following the `o=` is the resource the human looked at. Here is a 
-**tf** invocation that yields a list of the top 5 URLs that were fetched by a human:
+**topfew** invocation that yields a list of the top 5 URLs that were fetched by a human:
 
 ```shell
-tf -g picInfo.xml -f 6 -q -s '\?utm.*' '' -s " HTTP/..." "" -s "GET .*\/ongoing" ""
+topfew -g picInfo.xml -f 6 -q -s '\?utm.*' '' -s " HTTP/..." "" -s "GET .*\/ongoing" ""
 ```
 
 Note the `-g` to select only lines with `picInfo.xml`, the `-q` to request correct processing
@@ -160,8 +162,8 @@ Therefore, the observed effects of combinations of options can vary dramatically
 For example, if I want to list the top records containing the string `example` from a file named `big-file` I could do either of the following:
 
 ```shell
-tf -g example big-file 
-grep example big-file | tf
+topfew -g example big-file 
+grep example big-file |topfew
 ```
 
 When I benchmark topfew on a modern Apple-Silicon Mac and an elderly spinning-rust Linux VPS, I observe that the first option is faster on Mac, the second on Linux.

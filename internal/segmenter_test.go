@@ -68,7 +68,7 @@ func TestReadSegmentFiltering(t *testing.T) {
 		t.Error("config!")
 	}
 
-	tmpName := fmt.Sprintf("/tmp/tf-%d", os.Getpid())
+	tmpName := fmt.Sprintf("/tmp/topfew-%d", os.Getpid())
 	tmpfile, err := os.Create(tmpName)
 	if err != nil {
 		t.Fatal("can't make tmpfile: " + err.Error())
@@ -90,7 +90,7 @@ func TestReadSegmentFiltering(t *testing.T) {
 // ErrBufferFull condition, had to create lines 80k long to execute that, so rather than clutter
 // up the filesystem with this junk, we create them synthetically
 func TestVeryLongLines(t *testing.T) {
-	tmpName := fmt.Sprintf("/tmp/tf-%d", os.Getpid())
+	tmpName := fmt.Sprintf("/tmp/topfew-%d", os.Getpid())
 	tmpfile, err := os.Create(tmpName)
 	if err != nil {
 		t.Fatal("can't make tmpfile: " + err.Error())

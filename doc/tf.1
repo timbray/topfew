@@ -5,7 +5,7 @@ A program that finds and prints out the top few records in which a certain field
 .PP
 To find the IP address that most commonly hits your web site, given an Apache logfile named \fB\fCaccess_log\fR\&.
 .PP
-\fB\fCtf \-\-fields 1 access_log\fR
+\fB\fCtopfew\-\-fields 1 access_log\fR
 .PP
 The same effect could be achieved with
 .PP
@@ -15,20 +15,20 @@ But \fBtf\fP is usually much faster.
 .PP
 Do the same, but exclude high\-traffic bots (omitting the filename).
 .PP
-\fB\fCtf \-\-fields 1 \-\-vgrep googlebot \-\-vgrep bingbot\fR
+\fB\fCtopfew\-\-fields 1 \-\-vgrep googlebot \-\-vgrep bingbot\fR
 .PP
 Most popular IP addresses from May 2020.
 .PP
-\fB\fCtf \-\-fields 1 \-grep '\\[../May/2020'\fR
+\fB\fCtopfew\-\-fields 1 \-grep '\\[../May/2020'\fR
 .PP
 Most popular hour/minute of the day for retrievals.
 .PP
-\fB\fCtf \-\-fields 4 \-\-sed "\\\\[" ""  \-\-sed '^[^:]*:' ''  \-\-sed ':..$' ''\fR
+\fB\fCtopfew\-\-fields 4 \-\-sed "\\\\[" ""  \-\-sed '^[^:]*:' ''  \-\-sed ':..$' ''\fR
 .SH Usage
 .PP
 .RS
 .nf
-tf 
+topfew
     \-n, \-\-number (output line count) [default is 10]
     \-f, \-\-fields (field list) [default is the whole record]
     \-g, \-\-grep (regexp) [may repeat, default is accept all]
@@ -39,7 +39,7 @@ tf
     \-h, \-help, \-\-help
     filename [default is stdin]
 
-All the arguments are optional; if none are provided, tf will read records 
+All the arguments are optional; if none are provided, topfewwill read records
 from the standard input and list the 10 which occur most often.
 .fi
 .RE
@@ -102,8 +102,8 @@ For example, if I want to list the top records containing the string \fB\fCexamp
 .PP
 .RS
 .nf
-tf \-g example big\-file 
-grep example big\-file | tf
+topfew\-g example big\-file
+grep example big\-file |topfew
 .fi
 .RE
 .PP
