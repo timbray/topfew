@@ -3,7 +3,7 @@
 Each Topfew [release](https://github.com/timbray/topfew/releases) comes with binaries built for both the x86 and ARM
 flavors of Linux, MacOS, and Windows.
 
-Topfew comes with a Makefile which is uncomplicated. Typing `make` will create an executable named `tf`, 
+Topfew comes with a Makefile which is uncomplicated. Typing `make` will create an executable named `topfew`, 
 created by `go build` with no options, in the `./bin` directory.
 
 ## Arch Linux

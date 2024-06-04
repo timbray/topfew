@@ -131,14 +131,14 @@ func parseFields(spec string) ([]uint, error) {
 }
 
 const instructions = `
-tf (short for "topfew") finds the most common values in a line-structured input
+topfew finds the most common values in a line-structured input
 and prints the top few of them out, with their occurrence counts, in decreasing
 order of occurrences.
 
-Usage: tf
+Usage:topfew
 	-n, --number (output line count) [default is 10]
 	-f, --fields (field list) [default is the whole record]
-    -p, --fieldseparator (field separator regex) [default is white space]
+	-p, --fieldseparator (field separator regex) [default is white space]
 	-q, --quotedfields [default is false]
 	-g, --grep (regexp) [may repeat, default is accept all]
 	-v, --vgrep (regexp) [may repeat, default is reject none]
@@ -148,7 +148,7 @@ Usage: tf
 	-h, -help, --help
 	filename [default is stdin]
 
-All the arguments are optional; if none are provided, tf will read records 
+All the arguments are optional; if none are provided, topfew will read records
 from the standard input and list the 10 which occur most often.
 
 Field list is comma-separated integers, e.g. -f 3 or --fields 1,3,7. The fields
@@ -160,7 +160,7 @@ performance.
 
 Some files, for example Apache httpd logs, use space-separation but also
 allow spaces within fields which are quoted with ("). The -q/--quotedfields
-allows tf to process these correctly. It is an error to specify both
+allows topfew to process these correctly. It is an error to specify both
 -p and -q.
 
 The regexp-valued fields work as follows:
@@ -171,7 +171,7 @@ The regexp-valued fields work as follows:
 The regexp-valued fields can be supplied multiple times; the filtering
 and substitution will be performed in the order supplied.
 
-If the input is a named file, tf will process it in multiple parallel
+If the input is a named file, topfew will process it in multiple parallel
 threads, which can dramatically improve performance. The --width argument
 allows you to specify the number of threads. The default value is not always 
 optimal; experience with particular data on a particular computer may lead 
