@@ -28,7 +28,7 @@ Do the same, but exclude high-traffic bots (omitting the filename).
 
 Most popular IP addresses from May 2020.
 
-`topfew --fields 1 -grep '\[../May/2020'`
+`topfew --fields 1 --grep '\[../May/2020'`
 
 Most popular hour/minute of the day for retrievals.
 
