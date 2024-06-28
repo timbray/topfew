@@ -16,3 +16,11 @@ git clone https://aur.archlinux.org/topfew.git
 cd topfew
 makepkg -i
 ```
+
+## NixOS
+
+Topfew [is available on NixOS](https://search.nixos.org/packages?show=topfew).
+
+## Homebrew
+
+On MacOS, Topfew is [is available on Homebrew](https://formulae.brew.sh/formula/topfew).
