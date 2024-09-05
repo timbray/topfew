@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/timbray/topfew/branch/main/graph/badge.svg)](https://codecov.io/gh/timbray/topfew)
 [![Go Report Card](https://goreportcard.com/badge/github.com/timbray/topfew)](https://goreportcard.com/report/github.com/timbray/topfew)
 [![timbray/topfew](https://img.shields.io/github/go-mod/go-version/timbray/topfew)](https://github.com/timbray/topfew)
-
+[![0 dependencies!](https://0dependencies.dev/0dependencies.svg)](https://0dependencies.dev)
 
 A program that finds and prints out the top few records in which a certain field or combination of fields occurs most frequently.
 
